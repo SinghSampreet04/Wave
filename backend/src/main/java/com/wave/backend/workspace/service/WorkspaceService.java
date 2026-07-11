@@ -12,6 +12,8 @@ import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class WorkspaceService {
 
@@ -58,5 +60,32 @@ public class WorkspaceService {
                 owner.getId(),
                 owner.getUsername()
         );
+    }
+
+    public List<WorkspaceResponse> getMyWorkspaces() {
+
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        List<WorkspaceMember> memberships =
+                workspaceMemberRepository.findByUser(user);
+
+        return memberships.stream()
+                .map(member -> {
+
+                    Workspace workspace = member.getWorkspace();
+
+                    return new WorkspaceResponse(
+                            workspace.getId(),
+                            workspace.getName(),
+                            workspace.getDescription(),
+                            workspace.getOwner().getId(),
+                            workspace.getOwner().getUsername()
+                    );
+
+                })
+                .toList();
     }
 }

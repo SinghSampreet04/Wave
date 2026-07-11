@@ -6,6 +6,8 @@ import com.wave.backend.workspace.service.WorkspaceService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/workspaces")
 public class WorkspaceController {
@@ -21,5 +23,10 @@ public class WorkspaceController {
             @Valid @RequestBody CreateWorkspaceRequest request) {
 
         return workspaceService.createWorkspace(request);
+    }
+
+    @GetMapping
+    public List<WorkspaceResponse> getMyWorkspaces() {
+        return workspaceService.getMyWorkspaces();
     }
 }
