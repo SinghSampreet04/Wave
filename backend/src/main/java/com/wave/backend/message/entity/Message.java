@@ -25,10 +25,15 @@ public class Message {
     @JoinColumn(name = "channel_id", nullable = false)
     private Channel channel;
 
+    @Column(nullable = false)
+    private boolean edited = false;
+
+    private LocalDateTime editedAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable =false)
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -61,6 +66,14 @@ public class Message {
         return channel;
     }
 
+    public boolean isEdited() {
+        return edited;
+    }
+
+    public LocalDateTime getEditedAt() {
+        return editedAt;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -83,6 +96,14 @@ public class Message {
 
     public void setChannel(Channel channel) {
         this.channel = channel;
+    }
+
+    public void setEdited(boolean edited) {
+        this.edited = edited;
+    }
+
+    public void setEditedAt(LocalDateTime editedAt) {
+        this.editedAt = editedAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
