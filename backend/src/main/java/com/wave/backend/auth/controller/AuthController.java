@@ -1,12 +1,12 @@
 package com.wave.backend.auth.controller;
 
+import com.wave.backend.auth.dto.request.LoginRequest;
 import com.wave.backend.auth.dto.request.RegisterRequest;
 import com.wave.backend.auth.dto.response.AuthResponse;
+import com.wave.backend.auth.dto.response.LoginResponse;
 import com.wave.backend.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import com.wave.backend.auth.dto.request.RegisterRequest;
-import com.wave.backend.auth.dto.request.LoginRequest;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -23,15 +23,12 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
 
         return authService.register(request);
-
     }
 
     @PostMapping("/login")
-public AuthResponse login(
-        @Valid @RequestBody LoginRequest request) {
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request) {
 
-    return authService.login(request);
-
-}
-
+        return authService.login(request);
+    }
 }

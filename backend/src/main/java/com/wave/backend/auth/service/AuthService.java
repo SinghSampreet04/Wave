@@ -1,27 +1,39 @@
 package com.wave.backend.auth.service;
 
+import com.wave.backend.auth.dto.request.LoginRequest;
 import com.wave.backend.auth.dto.request.RegisterRequest;
 import com.wave.backend.auth.dto.response.AuthResponse;
+import com.wave.backend.auth.dto.response.LoginResponse;
+import com.wave.backend.auth.jwt.JwtService;
 import com.wave.backend.exception.EmailAlreadyExistsException;
+import com.wave.backend.exception.InvalidCredentialsException;
 import com.wave.backend.exception.UsernameAlreadyExistsException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.entity.UserRole;
 import com.wave.backend.user.repository.UserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.wave.backend.auth.dto.request.LoginRequest;
-import com.wave.backend.exception.InvalidCredentialsException;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -46,25 +58,24 @@ public class AuthService {
         userRepository.save(user);
 
         return new AuthResponse(
-        "User registered successfully.",
-        null
-);
+                "User registered successfully."
+        );
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
 
-    User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password."));
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        throw new InvalidCredentialsException("Invalid email or password.");
+        String accessToken = jwtService.generateAccessToken(request.getEmail());
+
+        return new LoginResponse(
+                "Login successful.",
+                accessToken
+        );
     }
-
-    return new AuthResponse(
-            "Login successful.",
-            null
-    );
-
-}
-
 }

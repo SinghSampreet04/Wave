@@ -1,103 +1,127 @@
-# Wave Database Design
+# Wave - Database Design
 
-## Core Tables
+# Database
 
-### users
-
-Stores all registered users.
+PostgreSQL 17
 
 ---
 
-### workspaces
+# Tables
 
-A workspace is an organization where users collaborate.
+## Authentication
 
-Example:
+users
 
-- OpenAI
-- Google
-- Personal
+Stores registered users.
 
----
+refresh_tokens
 
-### workspace_members
-
-Connects users to workspaces.
-
-A user can belong to many workspaces.
-
-A workspace contains many users.
+Stores refresh tokens for JWT authentication.
 
 ---
 
-### channels
+## Workspaces
 
-Channels belong to a workspace.
+workspaces
 
-Examples:
+Workspace information.
 
-- general
-- backend
-- frontend
-- random
+workspace_members
 
----
+Users belonging to workspaces.
 
-### messages
+workspace_invites
 
-Stores every message.
-
-Each message belongs to:
-
-- one channel
-- one sender
+Invitation links and pending invites.
 
 ---
 
-### message_reactions
+## Channels
 
-Stores reactions.
+channels
 
-Examples:
+Workspace channels.
 
-👍 ❤️ 😂 🔥 🎉
+channel_members
 
----
-
-### attachments
-
-Stores uploaded files.
-
-Images
-
-PDF
-
-ZIP
-
-Documents
+Members of private channels.
 
 ---
 
-### notifications
+## Messaging
 
-Stores unread notifications.
+messages
 
-Examples
+Stores all chat messages.
 
-Someone mentioned you.
+message_reactions
 
-Someone replied to your message.
-
-Someone invited you.
+Stores emoji reactions.
 
 ---
 
-### direct_conversations
+## Files
 
-Private conversations between two users.
+files
+
+Uploaded files.
 
 ---
 
-### direct_messages
+## Notifications
 
-Messages inside a private conversation.
+notifications
+
+Stores user notifications.
+
+---
+
+# Entity Relationship
+
+User
+
+↓
+
+Workspace
+
+↓
+
+Channel
+
+↓
+
+Message
+
+↓
+
+Reaction
+
+↓
+
+Notification
+
+---
+
+# Total Tables
+
+1. users
+
+2. refresh_tokens
+
+3. workspaces
+
+4. workspace_members
+
+5. workspace_invites
+
+6. channels
+
+7. channel_members
+
+8. messages
+
+9. message_reactions
+
+10. files
+
+11. notifications

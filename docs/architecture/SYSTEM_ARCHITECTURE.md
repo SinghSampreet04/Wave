@@ -2,101 +2,133 @@
 
 ## Project Overview
 
-Wave is a real-time team collaboration platform inspired by modern communication applications such as Slack and Microsoft Teams.
+Wave is a modern real-time collaboration platform inspired by Discord and Slack.
 
-The platform allows users to communicate through workspaces, channels, direct messages, and real-time messaging powered by WebSockets.
+The system allows users to communicate in real time through workspaces, channels, messaging, file sharing, and notifications.
 
 ---
 
 # Technology Stack
 
-## Frontend
-
-- React
-- React Router
-- Axios
-- Context API
-- CSS
-
 ## Backend
 
 - Java 17
-- Spring Boot
+- Spring Boot 3.5
 - Spring Security
 - Spring Data JPA
-- Hibernate
-- JWT Authentication
-- Spring WebSocket (Later)
-
-## Database
-
 - PostgreSQL
+- WebSocket (STOMP)
+- JWT Authentication
+- Maven
 
-## Future Technologies
+---
 
-- Redis
-- AWS S3
+## Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+- Zustand
+
+---
+
+## Infrastructure
+
 - Docker
+- Nginx
+- GitHub Actions
+- AWS EC2
+- AWS S3
+- Redis (future)
 
 ---
 
-# High Level Architecture
+# High-Level Architecture
 
-React Frontend
-
-↓
-
-REST API
-
-↓
-
-Spring Boot Backend
-
-↓
-
-Business Services
-
-↓
-
-PostgreSQL Database
-
-↓
-
-WebSocket Gateway (Real-Time Communication)
+```
+                React Frontend
+                      │
+                      │ REST API
+                      ▼
+            Spring Boot Backend
+          ┌───────────┴───────────┐
+          │                       │
+     REST Controllers        WebSocket
+          │                       │
+          └───────────┬───────────┘
+                      │
+                  Services
+                      │
+             Business Logic
+                      │
+               Spring Data JPA
+                      │
+                 PostgreSQL
+```
 
 ---
 
-# Core Modules
+# Backend Modules
 
-- Authentication
-- Users
-- Workspaces
-- Channels
-- Messages
-- Direct Messages
-- Notifications
-- File Uploads
+Authentication
+
+- Register
+- Login
+- JWT
+- Refresh Token
+
+Users
+
+- Profiles
+- Settings
+- Presence
+
+Workspaces
+
+- Create Workspace
+- Invite Members
+- Roles
+
+Channels
+
+- Public
+- Private
+
+Messages
+
+- Text
 - Reactions
-- Search
+- Threads
+- Replies
+
+Files
+
+- Upload
+- Download
+
+Notifications
+
+- Real-time
+- Mentions
+
+WebSocket
+
+- Live Messaging
+- Typing
+- Presence
 
 ---
 
-# Development Strategy
+# Design Principles
 
-The project will be built incrementally.
-
-1. Backend Foundation
-2. Authentication
-3. Workspace Management
-4. Channels
-5. Messaging
-6. WebSockets
-7. Presence
-8. Notifications
-9. File Uploads
-10. Search
-11. Deployment
-
----
-
-Version: 1.0
+- Modular Architecture
+- Feature-based packages
+- Stateless Authentication
+- REST + WebSockets
+- Secure by default
+- Scalable
+- Testable
+- Production Ready
