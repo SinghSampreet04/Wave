@@ -5,10 +5,12 @@ import com.wave.backend.channel.dto.CreateChannelRequest;
 import com.wave.backend.channel.entity.Channel;
 import com.wave.backend.channel.repository.ChannelRepository;
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.exception.WorkspaceAccessDeniedException;
+import com.wave.backend.exception.WorkspaceNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.entity.Workspace;
-import com.wave.backend.workspace.entity.WorkspaceMember;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
@@ -40,14 +42,17 @@ public class ChannelService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
-                .orElseThrow(() -> new RuntimeException("Workspace not found."));
+                .orElseThrow(() ->
+                        new WorkspaceNotFoundException("Workspace not found."));
 
-        WorkspaceMember membership =
-                workspaceMemberRepository.findByWorkspaceAndUser(workspace, user)
-                        .orElseThrow(() -> new RuntimeException("Access denied."));
+        workspaceMemberRepository
+                .findByWorkspaceAndUser(workspace, user)
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
 
         Channel channel = new Channel();
 
@@ -72,25 +77,27 @@ public class ChannelService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("Workspace not found."));
+                .orElseThrow(() ->
+                        new WorkspaceNotFoundException("Workspace not found."));
 
-        workspaceMemberRepository.findByWorkspaceAndUser(workspace, user)
-                .orElseThrow(() -> new RuntimeException("Access denied."));
+        workspaceMemberRepository
+                .findByWorkspaceAndUser(workspace, user)
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
 
         return channelRepository.findByWorkspace(workspace)
                 .stream()
-                .map(channel ->
-                        new ChannelResponse(
-                                channel.getId(),
-                                channel.getName(),
-                                channel.getDescription(),
-                                channel.isPrivate(),
-                                workspace.getId()
-                        )
-                )
+                .map(channel -> new ChannelResponse(
+                        channel.getId(),
+                        channel.getName(),
+                        channel.getDescription(),
+                        channel.isPrivate(),
+                        workspace.getId()
+                ))
                 .toList();
     }
 }

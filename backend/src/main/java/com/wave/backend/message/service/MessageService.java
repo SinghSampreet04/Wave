@@ -3,6 +3,9 @@ package com.wave.backend.message.service;
 import com.wave.backend.channel.entity.Channel;
 import com.wave.backend.channel.repository.ChannelRepository;
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.ChannelNotFoundException;
+import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.exception.WorkspaceAccessDeniedException;
 import com.wave.backend.message.dto.CreateMessageRequest;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
@@ -39,16 +42,19 @@ public class MessageService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User sender = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Channel channel = channelRepository.findById(request.getChannelId())
-                .orElseThrow(() -> new RuntimeException("Channel not found."));
+                .orElseThrow(() ->
+                        new ChannelNotFoundException("Channel not found."));
 
         Workspace workspace = channel.getWorkspace();
 
         workspaceMemberRepository
                 .findByWorkspaceAndUser(workspace, sender)
-                .orElseThrow(() -> new RuntimeException("Access denied."));
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
 
         Message message = new Message();
 
@@ -64,16 +70,19 @@ public class MessageService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new RuntimeException("Channel not found."));
+                .orElseThrow(() ->
+                        new ChannelNotFoundException("Channel not found."));
 
         Workspace workspace = channel.getWorkspace();
 
         workspaceMemberRepository
                 .findByWorkspaceAndUser(workspace, user)
-                .orElseThrow(() -> new RuntimeException("Access denied."));
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
 
         return messageRepository.findByChannelOrderByCreatedAtAsc(channel);
     }

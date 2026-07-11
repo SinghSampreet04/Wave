@@ -1,6 +1,7 @@
 package com.wave.backend.user.service;
 
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.dto.UserProfileResponse;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
@@ -20,7 +21,8 @@ public class UserService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         return new UserProfileResponse(
                 user.getId(),

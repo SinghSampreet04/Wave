@@ -1,6 +1,7 @@
 package com.wave.backend.workspace.service;
 
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.dto.CreateWorkspaceRequest;
@@ -36,7 +37,8 @@ public class WorkspaceService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User owner = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Workspace workspace = new Workspace();
 
@@ -67,7 +69,8 @@ public class WorkspaceService {
         String email = SecurityUtil.getCurrentUserEmail();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         List<WorkspaceMember> memberships =
                 workspaceMemberRepository.findByUser(user);
