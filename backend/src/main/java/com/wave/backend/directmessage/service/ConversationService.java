@@ -80,7 +80,7 @@ public class ConversationService {
                         new UserNotFoundException("User not found."));
 
         return conversationRepository
-                .findByUserOneOrUserTwoOrderByCreatedAtDesc(
+                .findByUserOneOrUserTwoOrderByLastMessageAtDesc(
                         currentUser,
                         currentUser
                 )
@@ -117,6 +117,8 @@ public class ConversationService {
                 otherUser.getFirstName(),
                 otherUser.getLastName(),
                 otherUser.getAvatar(),
+                conversation.getLastMessage(),
+                conversation.getLastMessageAt(),
                 conversation.getCreatedAt()
         );
 

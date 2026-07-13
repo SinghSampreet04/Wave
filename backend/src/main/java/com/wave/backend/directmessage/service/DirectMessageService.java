@@ -12,8 +12,10 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -70,6 +72,11 @@ public class DirectMessageService {
 
         message = directMessageRepository.save(message);
 
+        conversation.setLastMessage(message.getContent());
+        conversation.setLastMessageAt(LocalDateTime.now());
+
+        conversationRepository.save(conversation);
+
         eventPublisher.publishEvent(
                 new DirectMessageSentEvent(
                         message.getId(),
@@ -86,7 +93,9 @@ public class DirectMessageService {
     }
 
     public List<DirectMessageResponse> getConversationMessages(
-            Long conversationId
+            Long conversationId,
+            int page,
+            int size
     ) {
 
         String email = SecurityUtil.getCurrentUserEmail();
@@ -112,7 +121,10 @@ public class DirectMessageService {
         }
 
         return directMessageRepository
-                .findByConversationOrderByCreatedAtAsc(conversation)
+                .findByConversationOrderByCreatedAtDesc(
+                        conversation,
+                        PageRequest.of(page, size)
+                )
                 .stream()
                 .map(this::toResponse)
                 .toList();

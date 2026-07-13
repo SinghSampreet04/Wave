@@ -16,6 +16,10 @@ public class ConversationResponse {
 
     private String otherAvatar;
 
+    private String lastMessage;
+
+    private LocalDateTime lastMessageAt;
+
     private LocalDateTime createdAt;
 
     public ConversationResponse() {
@@ -28,6 +32,8 @@ public class ConversationResponse {
             String otherFirstName,
             String otherLastName,
             String otherAvatar,
+            String lastMessage,
+            LocalDateTime lastMessageAt,
             LocalDateTime createdAt
     ) {
         this.conversationId = conversationId;
@@ -36,6 +42,8 @@ public class ConversationResponse {
         this.otherFirstName = otherFirstName;
         this.otherLastName = otherLastName;
         this.otherAvatar = otherAvatar;
+        this.lastMessage = lastMessage;
+        this.lastMessageAt = lastMessageAt;
         this.createdAt = createdAt;
     }
 
@@ -85,6 +93,22 @@ public class ConversationResponse {
 
     public void setOtherAvatar(String otherAvatar) {
         this.otherAvatar = otherAvatar;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public LocalDateTime getLastMessageAt() {
+        return lastMessageAt;
+    }
+
+    public void setLastMessageAt(LocalDateTime lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
     }
 
     public LocalDateTime getCreatedAt() {

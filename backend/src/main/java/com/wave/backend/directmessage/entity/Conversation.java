@@ -40,6 +40,12 @@ public class Conversation {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private String lastMessage;
+
+    @Column
+    private LocalDateTime lastMessageAt;
+
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
@@ -64,6 +70,14 @@ public class Conversation {
         return createdAt;
     }
 
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public LocalDateTime getLastMessageAt() {
+        return lastMessageAt;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -78,6 +92,14 @@ public class Conversation {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public void setLastMessageAt(LocalDateTime lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
     }
 
 }

@@ -20,7 +20,7 @@ public interface ConversationRepository
             User userOne
     );
 
-    List<Conversation> findByUserOneOrUserTwoOrderByCreatedAtDesc(
+    List<Conversation> findByUserOneOrUserTwoOrderByLastMessageAtDesc(
             User userOne,
             User userTwo
     );
