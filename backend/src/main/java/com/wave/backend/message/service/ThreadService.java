@@ -1,5 +1,6 @@
 package com.wave.backend.message.service;
 
+import com.wave.backend.channelmember.service.ChannelMemberService;
 import com.wave.backend.common.event.ThreadReplyEvent;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.MessageNotFoundException;
@@ -24,17 +25,20 @@ public class ThreadService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final ChannelMemberService channelMemberService;
     private final ApplicationEventPublisher eventPublisher;
 
     public ThreadService(
             MessageRepository messageRepository,
             UserRepository userRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
+            ChannelMemberService channelMemberService,
             ApplicationEventPublisher eventPublisher
     ) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
+        this.channelMemberService = channelMemberService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -62,6 +66,12 @@ public class ThreadService {
                 .orElseThrow(() ->
                         new WorkspaceAccessDeniedException(
                                 "Access denied."));
+
+        // NEW: Enforce private channel membership
+        channelMemberService.validateChannelAccess(
+                parent.getChannel(),
+                sender
+        );
 
         Message reply = new Message();
 
@@ -92,6 +102,7 @@ public class ThreadService {
                 reply.getContent(),
                 reply.getCreatedAt()
         );
+
     }
 
     public List<Message> getReplies(
@@ -103,6 +114,7 @@ public class ThreadService {
                         new MessageNotFoundException("Message not found."));
 
         return messageRepository.findByParentMessageOrderByCreatedAtAsc(parent);
+
     }
 
 }

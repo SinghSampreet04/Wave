@@ -1,7 +1,10 @@
 package com.wave.backend.receipt.service;
 
+import com.wave.backend.channelmember.service.ChannelMemberService;
 import com.wave.backend.common.event.MessageReadEvent;
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.MessageNotFoundException;
+import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
 import com.wave.backend.receipt.dto.CreateReadReceiptRequest;
@@ -21,17 +24,20 @@ public class ReadReceiptService {
     private final MessageReadRepository messageReadRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ChannelMemberService channelMemberService;
     private final ApplicationEventPublisher eventPublisher;
 
     public ReadReceiptService(
             MessageReadRepository messageReadRepository,
             MessageRepository messageRepository,
             UserRepository userRepository,
+            ChannelMemberService channelMemberService,
             ApplicationEventPublisher eventPublisher
     ) {
         this.messageReadRepository = messageReadRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.channelMemberService = channelMemberService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -43,11 +49,17 @@ public class ReadReceiptService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found."));
+                        new UserNotFoundException("User not found."));
 
         Message message = messageRepository.findById(request.getMessageId())
                 .orElseThrow(() ->
-                        new RuntimeException("Message not found."));
+                        new MessageNotFoundException("Message not found."));
+
+        // Enforce private channel access
+        channelMemberService.validateChannelAccess(
+                message.getChannel(),
+                user
+        );
 
         return messageReadRepository
                 .findByMessageAndUser(message, user)
@@ -82,6 +94,7 @@ public class ReadReceiptService {
                     );
 
                 });
+
     }
 
 }

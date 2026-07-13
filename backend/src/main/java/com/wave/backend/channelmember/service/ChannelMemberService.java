@@ -31,82 +31,80 @@ public class ChannelMemberService {
         this.userRepository = userRepository;
     }
 
-    public ChannelMemberResponse joinChannel(
-            Long channelId
-    ) {
+    public ChannelMemberResponse joinChannel(Long channelId) {
 
         User currentUser = getCurrentUser();
 
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
-                        new ChannelNotFoundException(
-                                "Channel not found."
-                        ));
+                        new ChannelNotFoundException("Channel not found."));
 
-        if (channelMemberRepository.existsByChannelAndUser(
-                channel,
-                currentUser
-        )) {
-
+        if (channelMemberRepository.existsByChannelAndUser(channel, currentUser)) {
             throw new IllegalArgumentException(
                     "You are already a member of this channel."
             );
-
         }
 
         ChannelMember member = new ChannelMember();
-
         member.setChannel(channel);
         member.setUser(currentUser);
 
         member = channelMemberRepository.save(member);
 
         return toResponse(member);
-
     }
 
-    public void leaveChannel(
-            Long channelId
-    ) {
+    public void leaveChannel(Long channelId) {
 
         User currentUser = getCurrentUser();
 
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
-                        new ChannelNotFoundException(
-                                "Channel not found."
+                        new ChannelNotFoundException("Channel not found."));
+
+        ChannelMember member = channelMemberRepository
+                .findByChannelAndUser(channel, currentUser)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "You are not a member of this channel."
                         ));
 
-        ChannelMember member =
-                channelMemberRepository
-                        .findByChannelAndUser(
-                                channel,
-                                currentUser
-                        )
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "You are not a member of this channel."
-                                ));
-
         channelMemberRepository.delete(member);
-
     }
 
-    public List<ChannelMemberResponse> getMembers(
-            Long channelId
-    ) {
+    public List<ChannelMemberResponse> getMembers(Long channelId) {
 
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
-                        new ChannelNotFoundException(
-                                "Channel not found."
-                        ));
+                        new ChannelNotFoundException("Channel not found."));
 
-        return channelMemberRepository
-                .findByChannel(channel)
+        return channelMemberRepository.findByChannel(channel)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    /**
+     * Public channels:
+     *      Any workspace member can access.
+     *
+     * Private channels:
+     *      Only channel members can access.
+     */
+    public void validateChannelAccess(
+            Channel channel,
+            User user
+    ) {
+
+        if (!channel.isPrivate()) {
+            return;
+        }
+
+        if (!channelMemberRepository.existsByChannelAndUser(channel, user)) {
+            throw new IllegalArgumentException(
+                    "You are not a member of this private channel."
+            );
+        }
 
     }
 
@@ -114,27 +112,7 @@ public class ChannelMemberService {
             Channel channel,
             User user
     ) {
-
-        return channelMemberRepository.existsByChannelAndUser(
-                channel,
-                user
-        );
-
-    }
-
-    public void requireChannelMember(
-            Channel channel,
-            User user
-    ) {
-
-        if (!isChannelMember(channel, user)) {
-
-            throw new IllegalArgumentException(
-                    "Access denied."
-            );
-
-        }
-
+        return channelMemberRepository.existsByChannelAndUser(channel, user);
     }
 
     private User getCurrentUser() {
@@ -143,15 +121,10 @@ public class ChannelMemberService {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found."
-                        ));
-
+                        new UserNotFoundException("User not found."));
     }
 
-    private ChannelMemberResponse toResponse(
-            ChannelMember member
-    ) {
+    private ChannelMemberResponse toResponse(ChannelMember member) {
 
         return new ChannelMemberResponse(
                 member.getId(),
@@ -161,7 +134,6 @@ public class ChannelMemberService {
                 member.getUser().getUsername(),
                 member.getJoinedAt()
         );
-
     }
 
 }

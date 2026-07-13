@@ -2,6 +2,7 @@ package com.wave.backend.message.service;
 
 import com.wave.backend.channel.entity.Channel;
 import com.wave.backend.channel.repository.ChannelRepository;
+import com.wave.backend.channelmember.service.ChannelMemberService;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.ChannelNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
@@ -27,17 +28,20 @@ public class MessageService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final ChannelMemberService channelMemberService;
 
     public MessageService(
             MessageRepository messageRepository,
             ChannelRepository channelRepository,
             UserRepository userRepository,
-            WorkspaceMemberRepository workspaceMemberRepository
+            WorkspaceMemberRepository workspaceMemberRepository,
+            ChannelMemberService channelMemberService
     ) {
         this.messageRepository = messageRepository;
         this.channelRepository = channelRepository;
         this.userRepository = userRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
+        this.channelMemberService = channelMemberService;
     }
 
     public MessageResponse sendMessage(
@@ -61,6 +65,12 @@ public class MessageService {
                 .orElseThrow(() ->
                         new WorkspaceAccessDeniedException("Access denied."));
 
+        // NEW: Enforce private channel membership
+        channelMemberService.validateChannelAccess(
+                channel,
+                sender
+        );
+
         Message message = new Message();
 
         message.setContent(request.getContent());
@@ -70,6 +80,7 @@ public class MessageService {
         message = messageRepository.save(message);
 
         return toResponse(message);
+
     }
 
     public List<MessageResponse> getChannelMessages(
@@ -84,9 +95,28 @@ public class MessageService {
             int size
     ) {
 
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
+
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
                         new ChannelNotFoundException("Channel not found."));
+
+        Workspace workspace = channel.getWorkspace();
+
+        workspaceMemberRepository
+                .findByWorkspaceAndUser(workspace, currentUser)
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
+
+        // NEW: Enforce private channel membership
+        channelMemberService.validateChannelAccess(
+                channel,
+                currentUser
+        );
 
         return messageRepository
                 .findByChannelOrderByCreatedAtDesc(
@@ -100,11 +130,13 @@ public class MessageService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+
     }
 
     private MessageResponse toResponse(
             Message message
     ) {
+
         return new MessageResponse(
                 message.getId(),
                 message.getSender().getId(),
@@ -116,6 +148,7 @@ public class MessageService {
                 message.getCreatedAt(),
                 message.getUpdatedAt()
         );
+
     }
 
 }

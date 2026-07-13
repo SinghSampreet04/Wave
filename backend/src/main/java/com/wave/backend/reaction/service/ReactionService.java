@@ -1,5 +1,6 @@
 package com.wave.backend.reaction.service;
 
+import com.wave.backend.channelmember.service.ChannelMemberService;
 import com.wave.backend.common.event.ReactionAddedEvent;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.MessageNotFoundException;
@@ -21,17 +22,20 @@ public class ReactionService {
     private final ReactionRepository reactionRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ChannelMemberService channelMemberService;
     private final ApplicationEventPublisher eventPublisher;
 
     public ReactionService(
             ReactionRepository reactionRepository,
             MessageRepository messageRepository,
             UserRepository userRepository,
+            ChannelMemberService channelMemberService,
             ApplicationEventPublisher eventPublisher
     ) {
         this.reactionRepository = reactionRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.channelMemberService = channelMemberService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -46,6 +50,12 @@ public class ReactionService {
         Message message = messageRepository.findById(request.getMessageId())
                 .orElseThrow(() ->
                         new MessageNotFoundException("Message not found."));
+
+        // Enforce private channel access
+        channelMemberService.validateChannelAccess(
+                message.getChannel(),
+                user
+        );
 
         Reaction existingReaction = reactionRepository
                 .findByMessageAndUserAndEmoji(
@@ -72,6 +82,7 @@ public class ReactionService {
             reactionRepository.save(reaction);
 
             reacted = true;
+
         }
 
         long count = reactionRepository.countByMessageAndEmoji(
@@ -95,6 +106,7 @@ public class ReactionService {
                 count,
                 reacted
         );
+
     }
 
 }
