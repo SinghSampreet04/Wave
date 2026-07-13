@@ -9,6 +9,7 @@ import com.wave.backend.directmessage.entity.DirectMessage;
 import com.wave.backend.directmessage.repository.ConversationRepository;
 import com.wave.backend.directmessage.repository.DirectMessageRepository;
 import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.mention.service.MentionService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,17 +26,20 @@ public class DirectMessageService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final MentionService mentionService;
 
     public DirectMessageService(
             DirectMessageRepository directMessageRepository,
             ConversationRepository conversationRepository,
             UserRepository userRepository,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            MentionService mentionService
     ) {
         this.directMessageRepository = directMessageRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
+        this.mentionService = mentionService;
     }
 
     public DirectMessageResponse sendMessage(
@@ -76,6 +80,9 @@ public class DirectMessageService {
         conversation.setLastMessageAt(LocalDateTime.now());
 
         conversationRepository.save(conversation);
+
+        // NEW: Process @mentions
+        mentionService.processDirectMentions(message);
 
         eventPublisher.publishEvent(
                 new DirectMessageSentEvent(
