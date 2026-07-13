@@ -30,6 +30,11 @@ public class Message {
 
     private LocalDateTime editedAt;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -74,6 +79,14 @@ public class Message {
         return editedAt;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -106,6 +119,14 @@ public class Message {
         this.editedAt = editedAt;
     }
 
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
@@ -113,4 +134,5 @@ public class Message {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
 }
