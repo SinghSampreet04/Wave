@@ -1,7 +1,7 @@
 package com.wave.backend.websocket.controller;
 
 import com.wave.backend.message.dto.CreateMessageRequest;
-import com.wave.backend.message.entity.Message;
+import com.wave.backend.message.dto.MessageResponse;
 import com.wave.backend.message.service.MessageService;
 import com.wave.backend.websocket.dto.ChatMessage;
 import com.wave.backend.websocket.dto.ChatMessageResponse;
@@ -38,20 +38,21 @@ public class ChatWebSocketController {
         request.setChannelId(chatMessage.getChannelId());
         request.setContent(chatMessage.getContent());
 
-        Message savedMessage = messageService.sendMessage(request);
+        MessageResponse savedMessage =
+                messageService.sendMessage(request);
 
         ChatMessageResponse response =
                 new ChatMessageResponse(
                         savedMessage.getId(),
-                        savedMessage.getChannel().getId(),
-                        savedMessage.getSender().getId(),
-                        savedMessage.getSender().getUsername(),
+                        savedMessage.getChannelId(),
+                        savedMessage.getSenderId(),
+                        savedMessage.getSenderUsername(),
                         savedMessage.getContent(),
                         savedMessage.getCreatedAt()
                 );
 
         messagingTemplate.convertAndSend(
-                "/topic/channels/" + savedMessage.getChannel().getId(),
+                "/topic/channels/" + savedMessage.getChannelId(),
                 response
         );
     }

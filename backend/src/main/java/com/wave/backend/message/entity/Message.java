@@ -5,6 +5,8 @@ import com.wave.backend.user.entity.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "messages")
@@ -24,6 +26,13 @@ public class Message {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "channel_id", nullable = false)
     private Channel channel;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_message_id")
+    private Message parentMessage;
+
+    @OneToMany(mappedBy = "parentMessage")
+    private List<Message> replies = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean edited = false;
@@ -71,6 +80,14 @@ public class Message {
         return channel;
     }
 
+    public Message getParentMessage() {
+        return parentMessage;
+    }
+
+    public List<Message> getReplies() {
+        return replies;
+    }
+
     public boolean isEdited() {
         return edited;
     }
@@ -111,6 +128,14 @@ public class Message {
         this.channel = channel;
     }
 
+    public void setParentMessage(Message parentMessage) {
+        this.parentMessage = parentMessage;
+    }
+
+    public void setReplies(List<Message> replies) {
+        this.replies = replies;
+    }
+
     public void setEdited(boolean edited) {
         this.edited = edited;
     }
@@ -134,5 +159,4 @@ public class Message {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
 }

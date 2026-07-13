@@ -2,53 +2,45 @@ package com.wave.backend.message.dto;
 
 import java.time.LocalDateTime;
 
-public class MessageResponse {
+public class ThreadResponse {
 
     private Long id;
+
+    private Long parentMessageId;
 
     private Long senderId;
 
     private String senderUsername;
 
-    private Long channelId;
-
     private String content;
-
-    private boolean edited;
-
-    private boolean deleted;
 
     private LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;
-
-    public MessageResponse() {
+    public ThreadResponse() {
     }
 
-    public MessageResponse(
+    public ThreadResponse(
             Long id,
+            Long parentMessageId,
             Long senderId,
             String senderUsername,
-            Long channelId,
             String content,
-            boolean edited,
-            boolean deleted,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime createdAt
     ) {
         this.id = id;
+        this.parentMessageId = parentMessageId;
         this.senderId = senderId;
         this.senderUsername = senderUsername;
-        this.channelId = channelId;
         this.content = content;
-        this.edited = edited;
-        this.deleted = deleted;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Long getParentMessageId() {
+        return parentMessageId;
     }
 
     public Long getSenderId() {
@@ -59,32 +51,20 @@ public class MessageResponse {
         return senderUsername;
     }
 
-    public Long getChannelId() {
-        return channelId;
-    }
-
     public String getContent() {
         return content;
-    }
-
-    public boolean isEdited() {
-        return edited;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setParentMessageId(Long parentMessageId) {
+        this.parentMessageId = parentMessageId;
     }
 
     public void setSenderId(Long senderId) {
@@ -95,27 +75,12 @@ public class MessageResponse {
         this.senderUsername = senderUsername;
     }
 
-    public void setChannelId(Long channelId) {
-        this.channelId = channelId;
-    }
-
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public void setEdited(boolean edited) {
-        this.edited = edited;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

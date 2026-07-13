@@ -7,12 +7,15 @@ import com.wave.backend.exception.ChannelNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.exception.WorkspaceAccessDeniedException;
 import com.wave.backend.message.dto.CreateMessageRequest;
+import com.wave.backend.message.dto.MessageResponse;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.entity.Workspace;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,7 +40,9 @@ public class MessageService {
         this.workspaceMemberRepository = workspaceMemberRepository;
     }
 
-    public Message sendMessage(CreateMessageRequest request) {
+    public MessageResponse sendMessage(
+            CreateMessageRequest request
+    ) {
 
         String email = SecurityUtil.getCurrentUserEmail();
 
@@ -62,29 +67,55 @@ public class MessageService {
         message.setSender(sender);
         message.setChannel(channel);
 
-        return messageRepository.save(message);
+        message = messageRepository.save(message);
+
+        return toResponse(message);
     }
 
-    public List<Message> getChannelMessages(Long channelId) {
+    public List<MessageResponse> getChannelMessages(
+            Long channelId
+    ) {
+        return getChannelMessages(channelId, 0, 20);
+    }
 
-        String email = SecurityUtil.getCurrentUserEmail();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UserNotFoundException("User not found."));
+    public List<MessageResponse> getChannelMessages(
+            Long channelId,
+            int page,
+            int size
+    ) {
 
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
                         new ChannelNotFoundException("Channel not found."));
 
-        Workspace workspace = channel.getWorkspace();
+        return messageRepository
+                .findByChannelOrderByCreatedAtDesc(
+                        channel,
+                        PageRequest.of(
+                                page,
+                                size,
+                                Sort.by("createdAt").descending()
+                        )
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
-        workspaceMemberRepository
-                .findByWorkspaceAndUser(workspace, user)
-                .orElseThrow(() ->
-                        new WorkspaceAccessDeniedException("Access denied."));
-
-        return messageRepository.findByChannelOrderByCreatedAtAsc(channel);
+    private MessageResponse toResponse(
+            Message message
+    ) {
+        return new MessageResponse(
+                message.getId(),
+                message.getSender().getId(),
+                message.getSender().getUsername(),
+                message.getChannel().getId(),
+                message.getContent(),
+                message.isEdited(),
+                message.isDeleted(),
+                message.getCreatedAt(),
+                message.getUpdatedAt()
+        );
     }
 
 }
