@@ -8,8 +8,11 @@ import java.time.LocalDateTime;
 public class MessageEditedEvent {
 
     private final Long messageId;
+
     private final Long channelId;
+
     private final String content;
+
     private final LocalDateTime editedAt;
 
     public MessageEditedEvent(

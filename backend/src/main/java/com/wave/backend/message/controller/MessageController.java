@@ -1,8 +1,10 @@
 package com.wave.backend.message.controller;
 
 import com.wave.backend.message.dto.CreateMessageRequest;
-import com.wave.backend.message.dto.MessageResponse;
+import com.wave.backend.message.dto.MessageEditResponse;
+import com.wave.backend.message.dto.UpdateMessageRequest;
 import com.wave.backend.message.entity.Message;
+import com.wave.backend.message.service.MessageEditService;
 import com.wave.backend.message.service.MessageService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -14,43 +16,39 @@ import java.util.List;
 public class MessageController {
 
     private final MessageService messageService;
+    private final MessageEditService messageEditService;
 
-    public MessageController(MessageService messageService) {
+    public MessageController(
+            MessageService messageService,
+            MessageEditService messageEditService
+    ) {
         this.messageService = messageService;
+        this.messageEditService = messageEditService;
     }
 
     @PostMapping
-    public MessageResponse sendMessage(
+    public Message sendMessage(
             @Valid @RequestBody CreateMessageRequest request
     ) {
-
-        Message message = messageService.sendMessage(request);
-
-        return new MessageResponse(
-                message.getId(),
-                message.getContent(),
-                message.getSender().getId(),
-                message.getSender().getUsername(),
-                message.getChannel().getId(),
-                message.getCreatedAt()
-        );
+        return messageService.sendMessage(request);
     }
 
     @GetMapping("/channel/{channelId}")
-    public List<MessageResponse> getChannelMessages(
+    public List<Message> getChannelMessages(
             @PathVariable Long channelId
     ) {
-
-        return messageService.getChannelMessages(channelId)
-                .stream()
-                .map(message -> new MessageResponse(
-                        message.getId(),
-                        message.getContent(),
-                        message.getSender().getId(),
-                        message.getSender().getUsername(),
-                        message.getChannel().getId(),
-                        message.getCreatedAt()
-                ))
-                .toList();
+        return messageService.getChannelMessages(channelId);
     }
+
+    @PatchMapping("/{messageId}")
+    public MessageEditResponse editMessage(
+            @PathVariable Long messageId,
+            @Valid @RequestBody UpdateMessageRequest request
+    ) {
+        return messageEditService.editMessage(
+                messageId,
+                request
+        );
+    }
+
 }

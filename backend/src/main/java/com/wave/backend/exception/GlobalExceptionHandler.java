@@ -74,6 +74,27 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(MessageAccessDeniedException.class)
+public ResponseEntity<ErrorResponse> handleMessageAccessDenied(
+        MessageAccessDeniedException ex
+) {
+    return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+}
+
+@ExceptionHandler(MessageEditNotAllowedException.class)
+public ResponseEntity<ErrorResponse> handleMessageEditNotAllowed(
+        MessageEditNotAllowedException ex
+) {
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+}
+
+@ExceptionHandler(MessageAlreadyDeletedException.class)
+public ResponseEntity<ErrorResponse> handleMessageAlreadyDeleted(
+        MessageAlreadyDeletedException ex
+) {
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+}
+
     @ExceptionHandler(WorkspaceAccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleWorkspaceAccessDenied(
             WorkspaceAccessDeniedException ex
@@ -92,4 +113,5 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred."
         );
     }
+
 }
