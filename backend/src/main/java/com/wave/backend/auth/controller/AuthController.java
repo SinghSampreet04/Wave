@@ -5,6 +5,7 @@ import com.wave.backend.auth.dto.request.RegisterRequest;
 import com.wave.backend.auth.dto.response.AuthResponse;
 import com.wave.backend.auth.dto.response.LoginResponse;
 import com.wave.backend.auth.service.AuthService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,21 +15,28 @@ public class AuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(
+            AuthService authService
+    ) {
         this.authService = authService;
     }
 
     @PostMapping("/register")
     public AuthResponse register(
-            @Valid @RequestBody RegisterRequest request) {
+            @Valid @RequestBody RegisterRequest request
+    ) throws MessagingException {
 
         return authService.register(request);
+
     }
 
     @PostMapping("/login")
     public LoginResponse login(
-            @Valid @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request
+    ) {
 
         return authService.login(request);
+
     }
+
 }

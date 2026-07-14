@@ -2,6 +2,7 @@ package com.wave.backend.config;
 
 import com.wave.backend.auth.jwt.JwtAuthenticationFilter;
 import com.wave.backend.auth.service.CustomUserDetailsService;
+import com.wave.backend.ratelimit.filter.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,15 +17,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitFilter rateLimitFilter,
             CustomUserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.rateLimitFilter = rateLimitFilter;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -41,21 +45,28 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Public Authentication APIs
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-
-                        // Swagger/OpenAPI
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
+    "/api/v1/auth/**",
+    "/api/v1/password-reset/**",
+    "/api/v1/email-verification/**",
 
-                        // Everything else requires authentication
+    "/actuator/**",
+
+    "/swagger-ui/**",
+    "/swagger-ui.html",
+    "/v3/api-docs/**"
+)
+.permitAll()
+
                         .anyRequest().authenticated()
                 )
 
                 .userDetailsService(userDetailsService)
+
+                .addFilterBefore(
+                        rateLimitFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

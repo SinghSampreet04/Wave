@@ -8,10 +8,12 @@ import com.wave.backend.auth.jwt.JwtService;
 import com.wave.backend.exception.EmailAlreadyExistsException;
 import com.wave.backend.exception.InvalidCredentialsException;
 import com.wave.backend.exception.UsernameAlreadyExistsException;
+import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.entity.UserRole;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,17 +25,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final MetricsService metricsService;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            AuthenticationManager authenticationManager
+            AuthenticationManager authenticationManager,
+            MetricsService metricsService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.metricsService = metricsService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -57,6 +62,9 @@ public class AuthService {
 
         userRepository.save(user);
 
+        // Increment metric
+        metricsService.incrementUsersRegistered();
+
         return new AuthResponse(
                 "User registered successfully."
         );
@@ -64,18 +72,33 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
 
-        String accessToken = jwtService.generateAccessToken(request.getEmail());
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+
+        } catch (BadCredentialsException ex) {
+
+            metricsService.incrementFailedLogins();
+
+            throw new InvalidCredentialsException(
+                    "Invalid email or password."
+            );
+        }
+
+        String accessToken =
+                jwtService.generateAccessToken(request.getEmail());
+
+        metricsService.incrementSuccessfulLogins();
 
         return new LoginResponse(
                 "Login successful.",
                 accessToken
         );
     }
+
 }

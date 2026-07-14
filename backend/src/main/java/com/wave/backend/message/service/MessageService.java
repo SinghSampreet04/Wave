@@ -11,6 +11,7 @@ import com.wave.backend.message.dto.CreateMessageRequest;
 import com.wave.backend.message.dto.MessageResponse;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
+import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.entity.Workspace;
@@ -29,19 +30,22 @@ public class MessageService {
     private final UserRepository userRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final ChannelMemberService channelMemberService;
+    private final MetricsService metricsService;
 
     public MessageService(
             MessageRepository messageRepository,
             ChannelRepository channelRepository,
             UserRepository userRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
-            ChannelMemberService channelMemberService
+            ChannelMemberService channelMemberService,
+            MetricsService metricsService
     ) {
         this.messageRepository = messageRepository;
         this.channelRepository = channelRepository;
         this.userRepository = userRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.channelMemberService = channelMemberService;
+        this.metricsService = metricsService;
     }
 
     public MessageResponse sendMessage(
@@ -65,7 +69,6 @@ public class MessageService {
                 .orElseThrow(() ->
                         new WorkspaceAccessDeniedException("Access denied."));
 
-        // NEW: Enforce private channel membership
         channelMemberService.validateChannelAccess(
                 channel,
                 sender
@@ -78,6 +81,8 @@ public class MessageService {
         message.setChannel(channel);
 
         message = messageRepository.save(message);
+
+        metricsService.incrementMessageSent();
 
         return toResponse(message);
 
@@ -112,7 +117,6 @@ public class MessageService {
                 .orElseThrow(() ->
                         new WorkspaceAccessDeniedException("Access denied."));
 
-        // NEW: Enforce private channel membership
         channelMemberService.validateChannelAccess(
                 channel,
                 currentUser

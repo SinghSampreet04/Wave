@@ -8,6 +8,7 @@ import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.exception.WorkspaceAccessDeniedException;
 import com.wave.backend.exception.WorkspaceNotFoundException;
+import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.entity.Workspace;
@@ -24,17 +25,20 @@ public class ChannelService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final UserRepository userRepository;
+    private final MetricsService metricsService;
 
     public ChannelService(
             ChannelRepository channelRepository,
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            MetricsService metricsService
     ) {
         this.channelRepository = channelRepository;
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.userRepository = userRepository;
+        this.metricsService = metricsService;
     }
 
     public ChannelResponse createChannel(CreateChannelRequest request) {
@@ -62,6 +66,8 @@ public class ChannelService {
         channel.setPrivate(request.isPrivate());
 
         channel = channelRepository.save(channel);
+
+        metricsService.incrementChannelCreated();
 
         return new ChannelResponse(
                 channel.getId(),
@@ -100,4 +106,5 @@ public class ChannelService {
                 ))
                 .toList();
     }
+
 }

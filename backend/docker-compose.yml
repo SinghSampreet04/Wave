@@ -1,0 +1,72 @@
+services:
+
+  postgres:
+
+    image: postgres:17
+
+    container_name: wave-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: wave
+      POSTGRES_USER: sampreetsingh
+      POSTGRES_PASSWORD: wave123
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+
+    image: redis:7-alpine
+
+    container_name: wave-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    command: redis-server --appendonly yes
+
+  backend:
+
+    build: .
+
+    container_name: wave-backend
+
+    restart: unless-stopped
+
+    depends_on:
+      - postgres
+      - redis
+
+    ports:
+      - "8082:8082"
+
+    environment:
+
+      SERVER_PORT: 8082
+
+      DB_URL: jdbc:postgresql://postgres:5432/wave
+      DB_USERNAME: sampreetsingh
+      DB_PASSWORD: wave123
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      JWT_SECRET: V2F2ZVN1cGVyU2VjcmV0S2V5Rm9ySnd0QXV0aGVudGljYXRpb25DaGFuZ2VUaGlzQmVmb3JlUHJvZHVjdGlvbjEyMzQ1Njc4OQ==
+
+      UPLOAD_DIR: uploads
+
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: brarsam2004@gmail.com
+      MAIL_PASSWORD: tlbzusuzckfvlwzz
+
+volumes:
+
+  postgres_data:

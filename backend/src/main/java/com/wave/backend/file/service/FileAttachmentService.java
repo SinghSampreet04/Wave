@@ -10,6 +10,7 @@ import com.wave.backend.file.entity.FileAttachment;
 import com.wave.backend.file.repository.FileAttachmentRepository;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
+import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.core.io.Resource;
@@ -26,19 +27,22 @@ public class FileAttachmentService {
     private final FileStorageService fileStorageService;
     private final UserRepository userRepository;
     private final ChannelMemberService channelMemberService;
+    private final MetricsService metricsService;
 
     public FileAttachmentService(
             FileAttachmentRepository fileAttachmentRepository,
             MessageRepository messageRepository,
             FileStorageService fileStorageService,
             UserRepository userRepository,
-            ChannelMemberService channelMemberService
+            ChannelMemberService channelMemberService,
+            MetricsService metricsService
     ) {
         this.fileAttachmentRepository = fileAttachmentRepository;
         this.messageRepository = messageRepository;
         this.fileStorageService = fileStorageService;
         this.userRepository = userRepository;
         this.channelMemberService = channelMemberService;
+        this.metricsService = metricsService;
     }
 
     public FileUploadResponse uploadFile(
@@ -70,6 +74,8 @@ public class FileAttachmentService {
         attachment.setStoragePath("uploads/" + storedFilename);
 
         attachment = fileAttachmentRepository.save(attachment);
+
+        metricsService.incrementFileUpload();
 
         return new FileUploadResponse(
                 attachment.getId(),

@@ -2,6 +2,7 @@ package com.wave.backend.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -46,6 +47,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(
+            BadCredentialsException ex
+    ) {
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid email or password."
+        );
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(
             UserNotFoundException ex
@@ -75,25 +86,25 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MessageAccessDeniedException.class)
-public ResponseEntity<ErrorResponse> handleMessageAccessDenied(
-        MessageAccessDeniedException ex
-) {
-    return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
-}
+    public ResponseEntity<ErrorResponse> handleMessageAccessDenied(
+            MessageAccessDeniedException ex
+    ) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
 
-@ExceptionHandler(MessageEditNotAllowedException.class)
-public ResponseEntity<ErrorResponse> handleMessageEditNotAllowed(
-        MessageEditNotAllowedException ex
-) {
-    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-}
+    @ExceptionHandler(MessageEditNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleMessageEditNotAllowed(
+            MessageEditNotAllowedException ex
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
-@ExceptionHandler(MessageAlreadyDeletedException.class)
-public ResponseEntity<ErrorResponse> handleMessageAlreadyDeleted(
-        MessageAlreadyDeletedException ex
-) {
-    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-}
+    @ExceptionHandler(MessageAlreadyDeletedException.class)
+    public ResponseEntity<ErrorResponse> handleMessageAlreadyDeleted(
+            MessageAlreadyDeletedException ex
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     @ExceptionHandler(WorkspaceAccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleWorkspaceAccessDenied(
@@ -102,16 +113,16 @@ public ResponseEntity<ErrorResponse> handleMessageAlreadyDeleted(
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedException(
-            Exception ex
-    ) {
-        ex.printStackTrace();
+  @ExceptionHandler(Exception.class)
+public ResponseEntity<ErrorResponse> handleUnexpectedException(
+        Exception ex
+) {
 
-        return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred."
-        );
-    }
+    ex.printStackTrace();
 
+    return buildResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            ex.getClass().getName() + " : " + ex.getMessage()
+    );
+}
 }

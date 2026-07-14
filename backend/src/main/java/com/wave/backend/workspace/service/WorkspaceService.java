@@ -2,6 +2,7 @@ package com.wave.backend.workspace.service;
 
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import com.wave.backend.workspace.dto.CreateWorkspaceRequest;
@@ -21,15 +22,18 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final UserRepository userRepository;
+    private final MetricsService metricsService;
 
     public WorkspaceService(
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            MetricsService metricsService
     ) {
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.userRepository = userRepository;
+        this.metricsService = metricsService;
     }
 
     public WorkspaceResponse createWorkspace(CreateWorkspaceRequest request) {
@@ -47,6 +51,8 @@ public class WorkspaceService {
         workspace.setOwner(owner);
 
         workspace = workspaceRepository.save(workspace);
+
+        metricsService.incrementWorkspaceCreated();
 
         WorkspaceMember member = new WorkspaceMember();
         member.setWorkspace(workspace);
@@ -91,4 +97,5 @@ public class WorkspaceService {
                 })
                 .toList();
     }
+
 }
