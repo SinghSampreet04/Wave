@@ -13,6 +13,7 @@ import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,13 +68,7 @@ public class MentionService {
 
     public List<MentionResponse> getMyMentions() {
 
-        String email = SecurityUtil.getCurrentUserEmail();
-
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found."
-                        ));
+        User currentUser = getCurrentUser();
 
         return mentionRepository
                 .findByMentionedUserOrderByCreatedAtDesc(
@@ -85,19 +80,57 @@ public class MentionService {
 
     }
 
+    public List<MentionResponse> getUnreadMentions() {
+
+        User currentUser = getCurrentUser();
+
+        return mentionRepository
+                .findByMentionedUserAndReadFalseOrderByCreatedAtDesc(
+                        currentUser
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+    }
+
     public long getUnreadMentionCount() {
 
-        String email = SecurityUtil.getCurrentUserEmail();
+        User currentUser = getCurrentUser();
 
-        User currentUser = userRepository.findByEmail(email)
+        return mentionRepository
+                .countByMentionedUserAndReadFalse(
+                        currentUser
+                );
+
+    }
+
+    public MentionResponse markAsRead(
+            Long mentionId
+    ) {
+
+        User currentUser = getCurrentUser();
+
+        Mention mention = mentionRepository
+                .findByIdAndMentionedUser(
+                        mentionId,
+                        currentUser
+                )
                 .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found."
+                        new IllegalArgumentException(
+                                "Mention not found."
                         ));
 
-        return mentionRepository.countByMentionedUserAndReadFalse(
-                currentUser
-        );
+        if (!mention.isRead()) {
+
+            mention.setRead(true);
+            mention.setReadAt(LocalDateTime.now());
+
+            mention = mentionRepository.save(mention);
+
+        }
+
+        return toResponse(mention);
 
     }
 
@@ -152,12 +185,28 @@ public class MentionService {
                             mentionedUser.getId(),
                             sender.getId(),
                             sender.getUsername(),
-                            message != null ? message.getId() : null,
-                            directMessage != null ? directMessage.getId() : null
+                            message != null
+                                    ? message.getId()
+                                    : null,
+                            directMessage != null
+                                    ? directMessage.getId()
+                                    : null
                     )
             );
 
         }
+
+    }
+
+    private User getCurrentUser() {
+
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found."
+                        ));
 
     }
 

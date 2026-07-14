@@ -2,9 +2,7 @@ package com.wave.backend.mention.controller;
 
 import com.wave.backend.mention.dto.MentionResponse;
 import com.wave.backend.mention.service.MentionService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -27,10 +25,28 @@ public class MentionController {
 
     }
 
+    @GetMapping("/unread")
+    public List<MentionResponse> getUnreadMentions() {
+
+        return mentionService.getUnreadMentions();
+
+    }
+
     @GetMapping("/unread-count")
     public long getUnreadMentionCount() {
 
         return mentionService.getUnreadMentionCount();
+
+    }
+
+    @PatchMapping("/{mentionId}/read")
+    public MentionResponse markAsRead(
+            @PathVariable Long mentionId
+    ) {
+
+        return mentionService.markAsRead(
+                mentionId
+        );
 
     }
 

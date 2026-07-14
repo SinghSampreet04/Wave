@@ -34,6 +34,9 @@ public class Mention {
     @Column(nullable = false)
     private boolean read;
 
+    @Column
+    private LocalDateTime readAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -70,6 +73,10 @@ public class Mention {
         return read;
     }
 
+    public LocalDateTime getReadAt() {
+        return readAt;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -96,6 +103,10 @@ public class Mention {
 
     public void setRead(boolean read) {
         this.read = read;
+    }
+
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
