@@ -113,16 +113,9 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
-  @ExceptionHandler(Exception.class)
-public ResponseEntity<ErrorResponse> handleUnexpectedException(
-        Exception ex
-) {
-
-    ex.printStackTrace();
-
-    return buildResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            ex.getClass().getName() + " : " + ex.getMessage()
-    );
-}
+    @ExceptionHandler(Exception.class)
+    public void handleUnexpectedException(Exception ex) throws Exception {
+        ex.printStackTrace();
+        throw ex;
+    }
 }

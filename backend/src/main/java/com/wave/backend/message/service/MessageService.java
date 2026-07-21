@@ -19,6 +19,7 @@ import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class MessageService {
         this.metricsService = metricsService;
     }
 
+    @Transactional
     public MessageResponse sendMessage(
             CreateMessageRequest request
     ) {
@@ -85,15 +87,16 @@ public class MessageService {
         metricsService.incrementMessageSent();
 
         return toResponse(message);
-
     }
 
+    @Transactional(readOnly = true)
     public List<MessageResponse> getChannelMessages(
             Long channelId
     ) {
         return getChannelMessages(channelId, 0, 20);
     }
 
+    @Transactional(readOnly = true)
     public List<MessageResponse> getChannelMessages(
             Long channelId,
             int page,

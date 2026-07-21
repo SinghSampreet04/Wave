@@ -26,6 +26,12 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request
     ) throws MessagingException {
 
+        System.out.println("=================================");
+        System.out.println("REGISTER CONTROLLER REACHED");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Username: " + request.getUsername());
+        System.out.println("=================================");
+
         return authService.register(request);
 
     }

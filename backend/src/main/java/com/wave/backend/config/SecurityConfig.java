@@ -37,7 +37,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+        .cors(cors -> {})
+        .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -45,10 +46,13 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
+            .requestMatchers(
     "/api/v1/auth/**",
     "/api/v1/password-reset/**",
     "/api/v1/email-verification/**",
+
+    "/ws/**",
+    "/api/v1/ws/**",
 
     "/actuator/**",
 

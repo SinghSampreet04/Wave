@@ -4,6 +4,8 @@ import com.wave.backend.channel.dto.ChannelResponse;
 import com.wave.backend.channel.dto.CreateChannelRequest;
 import com.wave.backend.channel.entity.Channel;
 import com.wave.backend.channel.repository.ChannelRepository;
+import com.wave.backend.channelmember.entity.ChannelMember;
+import com.wave.backend.channelmember.repository.ChannelMemberRepository;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.exception.WorkspaceAccessDeniedException;
@@ -15,6 +17,7 @@ import com.wave.backend.workspace.entity.Workspace;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +27,7 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final ChannelMemberRepository channelMemberRepository;
     private final UserRepository userRepository;
     private final MetricsService metricsService;
 
@@ -31,16 +35,19 @@ public class ChannelService {
             ChannelRepository channelRepository,
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
+            ChannelMemberRepository channelMemberRepository,
             UserRepository userRepository,
             MetricsService metricsService
     ) {
         this.channelRepository = channelRepository;
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
+        this.channelMemberRepository = channelMemberRepository;
         this.userRepository = userRepository;
         this.metricsService = metricsService;
     }
 
+    @Transactional
     public ChannelResponse createChannel(CreateChannelRequest request) {
 
         String email = SecurityUtil.getCurrentUserEmail();
@@ -67,6 +74,13 @@ public class ChannelService {
 
         channel = channelRepository.save(channel);
 
+        // Automatically add the creator as a channel member
+        ChannelMember member = new ChannelMember();
+        member.setChannel(channel);
+        member.setUser(user);
+
+        channelMemberRepository.save(member);
+
         metricsService.incrementChannelCreated();
 
         return new ChannelResponse(
@@ -78,6 +92,7 @@ public class ChannelService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<ChannelResponse> getWorkspaceChannels(Long workspaceId) {
 
         String email = SecurityUtil.getCurrentUserEmail();

@@ -43,13 +43,21 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
 
+        System.out.println("----- ENTERED AUTH SERVICE -----");
+
+        System.out.println("Checking email...");
         if (userRepository.existsByEmail(request.getEmail())) {
+            System.out.println("Email already exists.");
             throw new EmailAlreadyExistsException("Email already exists.");
         }
 
+        System.out.println("Checking username...");
         if (userRepository.existsByUsername(request.getUsername())) {
+            System.out.println("Username already exists.");
             throw new UsernameAlreadyExistsException("Username already exists.");
         }
+
+        System.out.println("Creating user...");
 
         User user = new User();
 
@@ -60,10 +68,15 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.USER);
 
+        System.out.println("Saving user...");
+
         userRepository.save(user);
 
-        // Increment metric
+        System.out.println("User saved.");
+
         metricsService.incrementUsersRegistered();
+
+        System.out.println("Returning success response.");
 
         return new AuthResponse(
                 "User registered successfully."

@@ -13,6 +13,7 @@ import com.wave.backend.workspace.entity.WorkspaceRole;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -36,6 +37,7 @@ public class WorkspaceService {
         this.metricsService = metricsService;
     }
 
+    @Transactional
     public WorkspaceResponse createWorkspace(CreateWorkspaceRequest request) {
 
         String email = SecurityUtil.getCurrentUserEmail();
@@ -70,6 +72,7 @@ public class WorkspaceService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<WorkspaceResponse> getMyWorkspaces() {
 
         String email = SecurityUtil.getCurrentUserEmail();
