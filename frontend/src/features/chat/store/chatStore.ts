@@ -7,6 +7,7 @@ import type {
 } from "../types/chat";
 
 import type { TypingResponse } from "../../websocket/types/websocket";
+import { mergeReaction } from "../cache/messageCache";
 
 interface ChatStore extends ChatState {
   typingUsers: TypingResponse[];
@@ -92,44 +93,18 @@ export const useChatStore =
               return message;
             }
 
-            const updatedReactions = [
-              ...message.reactions,
-            ];
-
-            reactions.forEach(
-              (incomingReaction) => {
-                const index =
-                  updatedReactions.findIndex(
-                    (reaction) =>
-                      reaction.emoji ===
-                      incomingReaction.emoji
-                  );
-
-                if (
-                  incomingReaction.count ===
-                  0
-                ) {
-                  if (index !== -1) {
-                    updatedReactions.splice(
-                      index,
-                      1
-                    );
-                  }
-
-                  return;
-                }
-
-                if (index === -1) {
-                  updatedReactions.push(
+            const updatedReactions =
+              reactions.reduce(
+                (
+                  current,
+                  incomingReaction
+                ) =>
+                  mergeReaction(
+                    current,
                     incomingReaction
-                  );
-                } else {
-                  updatedReactions[
-                    index
-                  ] = incomingReaction;
-                }
-              }
-            );
+                  ),
+                message.reactions ?? []
+              );
 
             return {
               ...message,

@@ -8,8 +8,10 @@ import useClickOutside from "../../../hooks/useClickOutside";
 
 export default function PinnedMessages({
   channelId,
+  compact = false,
 }: {
   channelId: number;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -28,7 +30,14 @@ export default function PinnedMessages({
         className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-slate-300"
       >
         <Pin size={15} />
-        {data.length} pinned
+        <span>
+          {data.length}
+          {!compact && (
+            <span className="hidden xl:inline">
+              {" "}pinned
+            </span>
+          )}
+        </span>
       </button>
       {open && (
         <div className="absolute right-0 top-12 z-[90] max-h-80 w-80 overflow-y-auto rounded-2xl border border-white/15 bg-slate-950 p-2 shadow-2xl">

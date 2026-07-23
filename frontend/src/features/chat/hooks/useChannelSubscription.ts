@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { websocketService } from "../../../services/websocket/websocketService";
 
@@ -7,10 +8,12 @@ import { useWebSocketStore } from "../../websocket/store/websocketStore";
 import { useAuthStore } from "../../auth/store/authStore";
 
 import type { ChatMessage } from "../types/chat";
+import { updateReactionInMessageCache } from "../cache/messageCache";
 
 export function useChannelSubscription(
   channelId?: number
 ) {
+  const queryClient = useQueryClient();
   const connected = useWebSocketStore(
     (state) => state.connected
   );
@@ -105,7 +108,7 @@ export function useChannelSubscription(
               (item) => item.emoji === reaction.emoji
             );
 
-          updateReactions(reaction.messageId, [{
+          const normalized = {
             messageId: reaction.messageId,
             emoji: reaction.emoji,
             count: reaction.count,
@@ -113,7 +116,16 @@ export function useChannelSubscription(
               reaction.actorUserId === currentUserId
                 ? reaction.reacted
                 : existing?.reactedByCurrentUser ?? false,
-          }]);
+          };
+
+          updateReactions(
+            reaction.messageId,
+            [normalized]
+          );
+          updateReactionInMessageCache(
+            queryClient,
+            normalized
+          );
         }
       );
 
@@ -145,6 +157,7 @@ export function useChannelSubscription(
     updateMessage,
     updateReactions,
     currentUserId,
+    queryClient,
     startTyping,
     stopTyping,
   ]);
