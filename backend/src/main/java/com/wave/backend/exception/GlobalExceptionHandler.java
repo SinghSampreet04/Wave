@@ -87,6 +87,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFileNotFound(
+            FileNotFoundException ex
+    ) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     @ExceptionHandler(MessageAccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleMessageAccessDenied(
             MessageAccessDeniedException ex

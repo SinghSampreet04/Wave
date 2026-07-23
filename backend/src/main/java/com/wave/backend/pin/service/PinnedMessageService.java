@@ -9,6 +9,7 @@ import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.ChannelNotFoundException;
 import com.wave.backend.exception.MessageNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.exception.MessageAlreadyDeletedException;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
 import com.wave.backend.pin.dto.PinnedMessageResponse;
@@ -63,6 +64,12 @@ public class PinnedMessageService {
                 message.getChannel(),
                 currentUser
         );
+
+        if (message.isDeleted()) {
+            throw new MessageAlreadyDeletedException(
+                    "Deleted messages cannot be pinned."
+            );
+        }
 
         if (pinnedMessageRepository.existsByMessage(message)) {
 
@@ -142,7 +149,9 @@ public class PinnedMessageService {
         );
 
         return pinnedMessageRepository
-                .findByMessage_Channel_IdOrderByPinnedAtDesc(channelId)
+                .findByMessage_Channel_IdAndMessage_DeletedFalseOrderByPinnedAtDesc(
+                        channelId
+                )
                 .stream()
                 .map(this::toResponse)
                 .toList();

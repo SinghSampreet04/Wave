@@ -18,8 +18,10 @@ public interface PinnedMessageRepository
             Message message
     );
 
-    List<PinnedMessage> findByMessage_Channel_IdOrderByPinnedAtDesc(
+    List<PinnedMessage> findByMessage_Channel_IdAndMessage_DeletedFalseOrderByPinnedAtDesc(
             Long channelId
     );
+
+    void deleteByMessage(Message message);
 
 }

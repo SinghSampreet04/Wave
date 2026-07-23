@@ -27,4 +27,6 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
             Message message
     );
 
+    void deleteByMessage(Message message);
+
 }

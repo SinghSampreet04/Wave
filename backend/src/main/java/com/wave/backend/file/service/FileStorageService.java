@@ -15,10 +15,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.Set;
+import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class FileStorageService {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(FileStorageService.class);
     private static final long MAX_FILE_SIZE = 25 * 1024 * 1024;
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/png", "image/jpeg", "image/gif", "image/webp",
@@ -109,6 +114,42 @@ public class FileStorageService {
                     "Could not load file.",
                     ex
             );
+        }
+    }
+
+    public void deleteFiles(
+            Collection<String> storedFilenames
+    ) {
+        Path uploadPath = Paths.get(uploadDirectory)
+                .toAbsolutePath()
+                .normalize();
+
+        for (String storedFilename : storedFilenames) {
+            if (storedFilename == null || storedFilename.isBlank()) {
+                continue;
+            }
+
+            Path target = uploadPath
+                    .resolve(storedFilename)
+                    .normalize();
+
+            if (!target.getParent().equals(uploadPath)) {
+                log.warn(
+                        "Skipped unsafe stored file path: {}",
+                        storedFilename
+                );
+                continue;
+            }
+
+            try {
+                Files.deleteIfExists(target);
+            } catch (IOException ex) {
+                log.error(
+                        "Could not delete stored file {}",
+                        storedFilename,
+                        ex
+                );
+            }
         }
     }
 

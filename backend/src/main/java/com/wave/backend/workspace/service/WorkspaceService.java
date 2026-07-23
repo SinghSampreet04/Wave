@@ -13,6 +13,11 @@ import com.wave.backend.workspace.entity.WorkspaceMember;
 import com.wave.backend.workspace.entity.WorkspaceRole;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
+import com.wave.backend.exception.WorkspaceNotFoundException;
+import com.wave.backend.exception.WorkspaceAccessDeniedException;
+import com.wave.backend.file.event.StoredFilesDeletionEvent;
+import com.wave.backend.file.repository.FileAttachmentRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +30,23 @@ public class WorkspaceService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final UserRepository userRepository;
     private final MetricsService metricsService;
+    private final FileAttachmentRepository fileAttachmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public WorkspaceService(
             WorkspaceRepository workspaceRepository,
             WorkspaceMemberRepository workspaceMemberRepository,
             UserRepository userRepository,
-            MetricsService metricsService
+            MetricsService metricsService,
+            FileAttachmentRepository fileAttachmentRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.workspaceRepository = workspaceRepository;
         this.workspaceMemberRepository = workspaceMemberRepository;
         this.userRepository = userRepository;
         this.metricsService = metricsService;
+        this.fileAttachmentRepository = fileAttachmentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -150,5 +161,41 @@ public class WorkspaceService {
         member.setRole(WorkspaceRole.MEMBER);
 
         workspaceMemberRepository.save(member);
+    }
+
+    @Transactional
+    public void deleteWorkspace(
+            Long workspaceId
+    ) {
+        User currentUser = userRepository
+                .findByEmail(SecurityUtil.getCurrentUserEmail())
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
+        Workspace workspace = workspaceRepository
+                .findById(workspaceId)
+                .orElseThrow(() ->
+                        new WorkspaceNotFoundException(
+                                "Workspace not found."
+                        ));
+
+        if (!workspace.getOwner().getId()
+                .equals(currentUser.getId())) {
+            throw new WorkspaceAccessDeniedException(
+                    "Only the workspace owner can delete this workspace."
+            );
+        }
+
+        List<String> storedFilenames =
+                fileAttachmentRepository
+                        .findStoredFilenamesByWorkspaceId(workspaceId);
+
+        workspaceRepository.delete(workspace);
+        workspaceRepository.flush();
+
+        if (!storedFilenames.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new StoredFilesDeletionEvent(storedFilenames)
+            );
+        }
     }
 }

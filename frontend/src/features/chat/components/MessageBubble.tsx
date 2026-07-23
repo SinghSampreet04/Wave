@@ -114,14 +114,14 @@ export default function MessageBubble({
   const handleReaction = (
     emoji: string
   ) => {
-    closeAll();
-
     toggleReaction(
       {
         messageId: message.id,
         emoji,
       }
     );
+
+    closeAll();
   };
 
   const handleReply = () => {
@@ -228,28 +228,30 @@ export default function MessageBubble({
       </div>
 
       <div className="relative min-w-0 flex-1">
-        <MessageActions
-          canManageMessage={
-            canManageMessage
-          }
-          onReaction={
-            openReactionPicker
-          }
-          onReply={
-            handleReply
-          }
-          onCopy={handleCopy}
-          onEdit={() =>
-            setEditingMessage(
-              message.id
-            )
-          }
-          onDelete={
-            handleDelete
-          }
-          onPin={handlePin}
-          onMore={toggleMenu}
-        />
+        {!message.deleted && (
+          <MessageActions
+            canManageMessage={
+              canManageMessage
+            }
+            onReaction={
+              openReactionPicker
+            }
+            onReply={
+              handleReply
+            }
+            onCopy={handleCopy}
+            onEdit={() =>
+              setEditingMessage(
+                message.id
+              )
+            }
+            onDelete={
+              handleDelete
+            }
+            onPin={handlePin}
+            onMore={toggleMenu}
+          />
+        )}
 
         <MessageHeader
           message={message}
@@ -278,9 +280,14 @@ export default function MessageBubble({
             <MessageContent
               message={message}
             />
-            <MessageAttachments messageId={message.id} />
+            {!message.deleted && (
+              <MessageAttachments
+                messageId={message.id}
+              />
+            )}
 
-            {message.reactions.length >
+            {!message.deleted &&
+              message.reactions.length >
               0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {message.reactions.map(
@@ -329,7 +336,7 @@ export default function MessageBubble({
                   )
                 )}
               </div>
-            )}
+              )}
           </>
         )}
       </div>

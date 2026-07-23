@@ -10,6 +10,9 @@ import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.exception.WorkspaceAccessDeniedException;
 import com.wave.backend.exception.WorkspaceNotFoundException;
+import com.wave.backend.exception.ChannelNotFoundException;
+import com.wave.backend.file.event.StoredFilesDeletionEvent;
+import com.wave.backend.file.repository.FileAttachmentRepository;
 import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
@@ -18,6 +21,7 @@ import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import com.wave.backend.workspace.repository.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -30,6 +34,8 @@ public class ChannelService {
     private final ChannelMemberRepository channelMemberRepository;
     private final UserRepository userRepository;
     private final MetricsService metricsService;
+    private final FileAttachmentRepository fileAttachmentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ChannelService(
             ChannelRepository channelRepository,
@@ -37,7 +43,9 @@ public class ChannelService {
             WorkspaceMemberRepository workspaceMemberRepository,
             ChannelMemberRepository channelMemberRepository,
             UserRepository userRepository,
-            MetricsService metricsService
+            MetricsService metricsService,
+            FileAttachmentRepository fileAttachmentRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.channelRepository = channelRepository;
         this.workspaceRepository = workspaceRepository;
@@ -45,6 +53,8 @@ public class ChannelService {
         this.channelMemberRepository = channelMemberRepository;
         this.userRepository = userRepository;
         this.metricsService = metricsService;
+        this.fileAttachmentRepository = fileAttachmentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -127,6 +137,42 @@ public class ChannelService {
                         workspace.getId()
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public void deleteChannel(
+            Long channelId
+    ) {
+        User currentUser = userRepository
+                .findByEmail(SecurityUtil.getCurrentUserEmail())
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
+        Channel channel = channelRepository
+                .findById(channelId)
+                .orElseThrow(() ->
+                        new ChannelNotFoundException(
+                                "Channel not found."
+                        ));
+
+        if (!channel.getWorkspace().getOwner().getId()
+                .equals(currentUser.getId())) {
+            throw new WorkspaceAccessDeniedException(
+                    "Only the workspace owner can delete channels."
+            );
+        }
+
+        List<String> storedFilenames =
+                fileAttachmentRepository
+                        .findStoredFilenamesByChannelId(channelId);
+
+        channelRepository.delete(channel);
+        channelRepository.flush();
+
+        if (!storedFilenames.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new StoredFilesDeletionEvent(storedFilenames)
+            );
+        }
     }
 
 }

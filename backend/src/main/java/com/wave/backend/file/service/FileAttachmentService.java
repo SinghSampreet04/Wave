@@ -2,6 +2,8 @@ package com.wave.backend.file.service;
 
 import com.wave.backend.channelmember.service.ChannelMemberService;
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.exception.FileNotFoundException;
+import com.wave.backend.exception.MessageAlreadyDeletedException;
 import com.wave.backend.exception.MessageNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.file.dto.FileDownloadResponse;
@@ -58,6 +60,8 @@ public class FileAttachmentService {
                 .orElseThrow(() ->
                         new MessageNotFoundException("Message not found."));
 
+        ensureMessageIsAvailable(message);
+
         channelMemberService.validateChannelAccess(
                 message.getChannel(),
                 currentUser
@@ -97,6 +101,8 @@ public class FileAttachmentService {
 
         FileAttachment attachment = getAttachment(fileId);
 
+        ensureMessageIsAvailable(attachment.getMessage());
+
         channelMemberService.validateChannelAccess(
                 attachment.getMessage().getChannel(),
                 currentUser
@@ -119,6 +125,8 @@ public class FileAttachmentService {
 
         FileAttachment attachment = getAttachment(fileId);
 
+        ensureMessageIsAvailable(attachment.getMessage());
+
         channelMemberService.validateChannelAccess(
                 attachment.getMessage().getChannel(),
                 currentUser
@@ -136,7 +144,7 @@ public class FileAttachmentService {
 
         return fileAttachmentRepository.findById(fileId)
                 .orElseThrow(() ->
-                        new RuntimeException("File not found."));
+                        new FileNotFoundException("File not found."));
 
     }
 
@@ -149,6 +157,10 @@ public class FileAttachmentService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() ->
                         new MessageNotFoundException("Message not found."));
+
+        if (message.isDeleted()) {
+            return List.of();
+        }
 
         channelMemberService.validateChannelAccess(
                 message.getChannel(),
@@ -175,6 +187,16 @@ public class FileAttachmentService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found."));
 
+    }
+
+    private void ensureMessageIsAvailable(
+            Message message
+    ) {
+        if (message.isDeleted()) {
+            throw new MessageAlreadyDeletedException(
+                    "Files from deleted messages are unavailable."
+            );
+        }
     }
 
 }

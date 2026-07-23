@@ -6,6 +6,7 @@ import com.wave.backend.workspace.dto.WorkspaceResponse;
 import com.wave.backend.workspace.service.WorkspaceService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -44,5 +45,13 @@ public class WorkspaceController {
                 workspaceId,
                 request
         );
+    }
+
+    @DeleteMapping("/{workspaceId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteWorkspace(
+            @PathVariable Long workspaceId
+    ) {
+        workspaceService.deleteWorkspace(workspaceId);
     }
 }

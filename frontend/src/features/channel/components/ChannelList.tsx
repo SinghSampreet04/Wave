@@ -8,6 +8,8 @@ import ChannelItem from "./ChannelItem";
 import ChannelLoading from "./ChannelLoading";
 import ChannelEmptyState from "./ChannelEmptyState";
 import { useDirectStore } from "../../direct/store";
+import { useAuthStore } from "../../auth/store/authStore";
+import { useDeleteChannel } from "../hooks/useDeleteChannel";
 
 export default function ChannelList() {
   const activeWorkspace = useWorkspaceStore(
@@ -30,6 +32,16 @@ export default function ChannelList() {
 
   const setActiveConversation = useDirectStore(
     (state) => state.setActiveConversation
+  );
+  const currentUserId = useAuthStore(
+    (state) =>
+      state.currentUser?.id
+  );
+  const {
+    mutate: deleteChannel,
+    isPending: isDeleting,
+  } = useDeleteChannel(
+    activeWorkspace?.id ?? 0
   );
 
   useEffect(() => {
@@ -76,6 +88,20 @@ export default function ChannelList() {
           onClick={() => {
             setActiveConversation(null);
             setActiveChannel(channel);
+          }}
+          canDelete={
+            activeWorkspace.ownerId ===
+            currentUserId
+          }
+          isDeleting={isDeleting}
+          onDelete={() => {
+            if (
+              window.confirm(
+                `Delete channel #${channel.name} and all of its messages? This cannot be undone.`
+              )
+            ) {
+              deleteChannel(channel.id);
+            }
           }}
         />
       ))}

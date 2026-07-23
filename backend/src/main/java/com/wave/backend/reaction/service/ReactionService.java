@@ -5,6 +5,7 @@ import com.wave.backend.common.event.ReactionAddedEvent;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.exception.MessageNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
+import com.wave.backend.exception.MessageAlreadyDeletedException;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
 import com.wave.backend.reaction.dto.CreateReactionRequest;
@@ -62,6 +63,12 @@ public class ReactionService {
         Message message = messageRepository.findById(request.getMessageId())
                 .orElseThrow(() ->
                         new MessageNotFoundException("Message not found."));
+
+        if (message.isDeleted()) {
+            throw new MessageAlreadyDeletedException(
+                    "Deleted messages cannot receive reactions."
+            );
+        }
 
         // Enforce private channel access
         channelMemberService.validateChannelAccess(

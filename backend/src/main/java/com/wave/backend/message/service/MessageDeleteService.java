@@ -9,12 +9,19 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.message.dto.MessageDeleteResponse;
 import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.repository.MessageRepository;
+import com.wave.backend.file.event.StoredFilesDeletionEvent;
+import com.wave.backend.file.entity.FileAttachment;
+import com.wave.backend.file.repository.FileAttachmentRepository;
+import com.wave.backend.pin.repository.PinnedMessageRepository;
+import com.wave.backend.reaction.repository.ReactionRepository;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class MessageDeleteService {
@@ -22,17 +29,27 @@ public class MessageDeleteService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final FileAttachmentRepository fileAttachmentRepository;
+    private final PinnedMessageRepository pinnedMessageRepository;
+    private final ReactionRepository reactionRepository;
 
     public MessageDeleteService(
             MessageRepository messageRepository,
             UserRepository userRepository,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            FileAttachmentRepository fileAttachmentRepository,
+            PinnedMessageRepository pinnedMessageRepository,
+            ReactionRepository reactionRepository
     ) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
+        this.fileAttachmentRepository = fileAttachmentRepository;
+        this.pinnedMessageRepository = pinnedMessageRepository;
+        this.reactionRepository = reactionRepository;
     }
 
+    @Transactional
     public MessageDeleteResponse deleteMessage(
             Long messageId
     ) {
@@ -59,6 +76,16 @@ public class MessageDeleteService {
             );
         }
 
+        List<String> storedFilenames =
+                fileAttachmentRepository.findByMessage(message)
+                        .stream()
+                        .map(FileAttachment::getStoredFilename)
+                        .toList();
+
+        pinnedMessageRepository.deleteByMessage(message);
+        reactionRepository.deleteByMessage(message);
+        fileAttachmentRepository.deleteByMessage(message);
+
         message.setDeleted(true);
         message.setDeletedAt(LocalDateTime.now());
         message.setEdited(true);
@@ -73,6 +100,11 @@ public class MessageDeleteService {
                         message.getDeletedAt()
                 )
         );
+        if (!storedFilenames.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new StoredFilesDeletionEvent(storedFilenames)
+            );
+        }
 
         return new MessageDeleteResponse(
                 message.getId(),

@@ -6,6 +6,8 @@ import { useWorkspaceUIStore } from "../store/workspaceUIStore";
 import WorkspaceEmptyState from "./WorkspaceEmptyState";
 import WorkspaceItem from "./WorkspaceItem";
 import WorkspaceLoading from "./WorkspaceLoading";
+import { useAuthStore } from "../../auth/store/authStore";
+import { useDeleteWorkspace } from "../hooks/useDeleteWorkspace";
 
 export default function WorkspaceList() {
   const { data, isLoading, isError } = useWorkspaces();
@@ -22,6 +24,14 @@ export default function WorkspaceList() {
     useWorkspaceUIStore(
       (state) => state.openCreateWorkspaceModal
     );
+  const currentUserId = useAuthStore(
+    (state) =>
+      state.currentUser?.id
+  );
+  const {
+    mutate: deleteWorkspace,
+    isPending: isDeleting,
+  } = useDeleteWorkspace();
 
   useEffect(() => {
     if (
@@ -65,6 +75,22 @@ export default function WorkspaceList() {
           onClick={() =>
             setActiveWorkspace(workspace)
           }
+          canDelete={
+            workspace.ownerId ===
+            currentUserId
+          }
+          isDeleting={isDeleting}
+          onDelete={() => {
+            if (
+              window.confirm(
+                `Delete workspace "${workspace.name}" and all of its channels and messages? This cannot be undone.`
+              )
+            ) {
+              deleteWorkspace(
+                workspace.id
+              );
+            }
+          }}
         />
       ))}
     </div>

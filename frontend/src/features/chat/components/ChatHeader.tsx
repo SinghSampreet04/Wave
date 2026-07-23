@@ -35,7 +35,7 @@ export default function ChatHeader({
   return (
     <>
     <header
-      className={`border-b border-white/10 bg-slate-950/40 backdrop-blur-xl ${
+      className={`relative z-30 border-b border-white/10 bg-slate-950/95 backdrop-blur-xl ${
         compact
           ? "px-5 py-4"
           : "px-8 py-5"

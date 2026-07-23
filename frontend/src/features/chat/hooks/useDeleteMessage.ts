@@ -1,10 +1,15 @@
-import { useMutation } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import { deleteMessage } from "../api/chat";
 import { useChatStore } from "../store/chatStore";
 
 export function useDeleteMessage() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (
       messageId: number
@@ -15,7 +20,21 @@ export function useDeleteMessage() {
         id: deletedMessage.messageId,
         deleted: true,
         content: "This message was deleted.",
+        reactions: [],
         updatedAt: deletedMessage.deletedAt,
+      });
+
+      void queryClient.invalidateQueries({
+        queryKey: [
+          "message-files",
+          deletedMessage.messageId,
+        ],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [
+          "pinned-messages",
+          deletedMessage.channelId,
+        ],
       });
 
       toast.success(

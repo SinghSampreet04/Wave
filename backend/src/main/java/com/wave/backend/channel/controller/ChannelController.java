@@ -5,6 +5,7 @@ import com.wave.backend.channel.dto.CreateChannelRequest;
 import com.wave.backend.channel.service.ChannelService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
@@ -30,5 +31,13 @@ public class ChannelController {
             @PathVariable Long workspaceId
     ) {
         return channelService.getWorkspaceChannels(workspaceId);
+    }
+
+    @DeleteMapping("/{channelId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteChannel(
+            @PathVariable Long channelId
+    ) {
+        channelService.deleteChannel(channelId);
     }
 }

@@ -27,3 +27,11 @@ export async function inviteWorkspaceMember(
     request
   );
 }
+
+export async function deleteWorkspace(
+  workspaceId: number
+): Promise<void> {
+  await api.delete(
+    `/v1/workspaces/${workspaceId}`
+  );
+}

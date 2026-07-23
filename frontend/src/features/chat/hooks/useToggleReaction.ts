@@ -40,14 +40,10 @@ export function useToggleReaction() {
         emoji
       ),
 
-    onMutate: async ({
+    onMutate: ({
       messageId,
       emoji,
     }) => {
-      await queryClient.cancelQueries({
-        queryKey: ["messages"],
-      });
-
       const existing = useChatStore
         .getState()
         .messages.find(

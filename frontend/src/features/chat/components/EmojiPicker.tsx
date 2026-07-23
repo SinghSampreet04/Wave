@@ -42,7 +42,12 @@ export default function EmojiPicker({
           <button
             key={emoji}
             type="button"
-            onClick={() => onSelect(emoji)}
+            aria-label={`React with ${emoji}`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onSelect(emoji);
+            }}
             className="
               flex
               h-10

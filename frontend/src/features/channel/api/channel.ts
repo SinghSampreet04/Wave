@@ -28,6 +28,14 @@ export async function createChannel(
   return response.data;
 }
 
+export async function deleteChannel(
+  channelId: number
+): Promise<void> {
+  await api.delete(
+    `/v1/channels/${channelId}`
+  );
+}
+
 export async function inviteUserToChannel(
   channelId: number,
   inviteeId: number

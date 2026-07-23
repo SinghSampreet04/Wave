@@ -89,8 +89,21 @@ export function useChannelSubscription(
             deleted: deletedMessage.deleted,
             content:
               "This message was deleted.",
+            reactions: [],
             updatedAt:
               deletedMessage.deletedAt,
+          });
+          void queryClient.invalidateQueries({
+            queryKey: [
+              "message-files",
+              deletedMessage.messageId,
+            ],
+          });
+          void queryClient.invalidateQueries({
+            queryKey: [
+              "pinned-messages",
+              channelId,
+            ],
           });
         }
       );
