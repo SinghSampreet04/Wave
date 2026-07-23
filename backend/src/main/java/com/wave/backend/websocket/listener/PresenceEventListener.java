@@ -12,6 +12,7 @@ import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Component
 public class PresenceEventListener {
@@ -38,8 +39,13 @@ public class PresenceEventListener {
         StompHeaderAccessor accessor =
                 StompHeaderAccessor.wrap(event.getMessage());
 
-        String username =
-                (String) accessor.getSessionAttributes().get("username");
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+
+        if (sessionAttributes == null) {
+            return;
+        }
+
+        String username = (String) sessionAttributes.get("username");
 
         if (username == null) {
             return;
@@ -62,15 +68,7 @@ public class PresenceEventListener {
 
         sessionRegistry.register(session);
 
-        presenceService.userConnected(user.getEmail());
-
-        System.out.println("--------------------------------");
-        System.out.println("User Connected");
-        System.out.println("Session : " + accessor.getSessionId());
-        System.out.println("Username: " + user.getUsername());
-        System.out.println("Online Sessions: "
-                + sessionRegistry.getActiveSessionCount());
-        System.out.println("--------------------------------");
+        presenceService.userConnected(user, accessor.getSessionId());
 
     }
 
@@ -88,17 +86,12 @@ public class PresenceEventListener {
             return;
         }
 
-        presenceService.userDisconnected(session.getEmail());
+        User user = userRepository.findById(session.getUserId()).orElse(null);
+        if (user != null) {
+            presenceService.userDisconnected(user, sessionId);
+        }
 
         sessionRegistry.unregister(sessionId);
-
-        System.out.println("--------------------------------");
-        System.out.println("User Disconnected");
-        System.out.println("Session : " + sessionId);
-        System.out.println("Username: " + session.getUsername());
-        System.out.println("Online Sessions: "
-                + sessionRegistry.getActiveSessionCount());
-        System.out.println("--------------------------------");
 
     }
 

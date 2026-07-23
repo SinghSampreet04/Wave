@@ -23,4 +23,8 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
             String emoji
     );
 
+    List<Reaction> findAllByMessageOrderByEmojiAsc(
+            Message message
+    );
+
 }

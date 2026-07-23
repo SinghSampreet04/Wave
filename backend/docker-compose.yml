@@ -9,9 +9,9 @@ services:
     restart: unless-stopped
 
     environment:
-      POSTGRES_DB: wave
-      POSTGRES_USER: sampreetsingh
-      POSTGRES_PASSWORD: wave123
+      POSTGRES_DB: ${POSTGRES_DB:-wave}
+      POSTGRES_USER: ${POSTGRES_USER:-wave}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wave-local-password}
 
     ports:
       - "5432:5432"
@@ -52,21 +52,31 @@ services:
       SERVER_PORT: 8082
 
       DB_URL: jdbc:postgresql://postgres:5432/wave
-      DB_USERNAME: sampreetsingh
-      DB_PASSWORD: wave123
+      DB_USERNAME: ${POSTGRES_USER:-wave}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-wave-local-password}
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "1"
+      SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      JWT_SECRET: V2F2ZVN1cGVyU2VjcmV0S2V5Rm9ySnd0QXV0aGVudGljYXRpb25DaGFuZ2VUaGlzQmVmb3JlUHJvZHVjdGlvbjEyMzQ1Njc4OQ==
+      JWT_SECRET: ${JWT_SECRET:-V2F2ZUxvY2FsRGV2ZWxvcG1lbnRLZXlGb3JKV1RUb2tlbnNSZXBsYWNlQmVmb3JlUHJvZHVjdGlvbjEyMzQ1Njc4OTA=}
 
-      UPLOAD_DIR: uploads
+      UPLOAD_DIR: /app/uploads
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
 
-      MAIL_HOST: smtp.gmail.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: brarsam2004@gmail.com
-      MAIL_PASSWORD: tlbzusuzckfvlwzz
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_HEALTH_ENABLED: ${MAIL_HEALTH_ENABLED:-false}
+
+    volumes:
+      - wave_uploads:/app/uploads
 
 volumes:
 
   postgres_data:
+  wave_uploads:

@@ -2,6 +2,8 @@ package com.wave.backend.mention.repository;
 
 import com.wave.backend.mention.entity.Mention;
 import com.wave.backend.user.entity.User;
+import com.wave.backend.message.entity.Message;
+import com.wave.backend.directmessage.entity.DirectMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -24,6 +26,16 @@ public interface MentionRepository
 
     Optional<Mention> findByIdAndMentionedUser(
             Long id,
+            User mentionedUser
+    );
+
+    boolean existsByMessageAndMentionedUser(
+            Message message,
+            User mentionedUser
+    );
+
+    boolean existsByDirectMessageAndMentionedUser(
+            DirectMessage directMessage,
             User mentionedUser
     );
 

@@ -1,6 +1,7 @@
 package com.wave.backend.directmessage.service;
 
 import com.wave.backend.common.util.SecurityUtil;
+import com.wave.backend.common.event.DirectMessageDeletedEvent;
 import com.wave.backend.directmessage.dto.DirectMessageDeleteResponse;
 import com.wave.backend.directmessage.entity.DirectMessage;
 import com.wave.backend.directmessage.repository.DirectMessageRepository;
@@ -8,21 +9,27 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DirectMessageDeleteService {
 
     private final DirectMessageRepository directMessageRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public DirectMessageDeleteService(
             DirectMessageRepository directMessageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
+    @Transactional
     public DirectMessageDeleteResponse deleteMessage(
             Long messageId
     ) {
@@ -60,6 +67,13 @@ public class DirectMessageDeleteService {
         message.setContent("This message was deleted.");
 
         directMessageRepository.save(message);
+
+        eventPublisher.publishEvent(
+                new DirectMessageDeletedEvent(
+                        message.getId(),
+                        message.getConversation().getId()
+                )
+        );
 
         return new DirectMessageDeleteResponse(
                 message.getId(),

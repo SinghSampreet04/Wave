@@ -14,14 +14,35 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import java.util.Set;
 
 @Service
 public class FileStorageService {
+
+    private static final long MAX_FILE_SIZE = 25 * 1024 * 1024;
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/png", "image/jpeg", "image/gif", "image/webp",
+            "application/pdf", "application/zip", "application/x-zip-compressed",
+            "text/plain", "text/csv", "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
 
     @Value("${wave.upload-dir:uploads}")
     private String uploadDirectory;
 
     public String storeFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty.");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("Maximum allowed file size is 25 MB.");
+        }
+        if (file.getContentType() == null
+                || !ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
+            throw new IllegalArgumentException("Unsupported file type.");
+        }
 
         try {
 
@@ -33,6 +54,9 @@ public class FileStorageService {
 
             String originalFilename =
                     StringUtils.cleanPath(file.getOriginalFilename());
+            if (originalFilename.contains("..")) {
+                throw new IllegalArgumentException("Invalid file name.");
+            }
 
             String extension = "";
 

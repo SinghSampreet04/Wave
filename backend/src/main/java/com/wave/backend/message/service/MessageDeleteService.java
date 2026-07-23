@@ -33,7 +33,9 @@ public class MessageDeleteService {
         this.eventPublisher = eventPublisher;
     }
 
-    public MessageDeleteResponse deleteMessage(Long messageId) {
+    public MessageDeleteResponse deleteMessage(
+            Long messageId
+    ) {
 
         String email = SecurityUtil.getCurrentUserEmail();
 
@@ -59,6 +61,7 @@ public class MessageDeleteService {
 
         message.setDeleted(true);
         message.setDeletedAt(LocalDateTime.now());
+        message.setEdited(true);
         message.setContent("This message was deleted.");
 
         message = messageRepository.save(message);
@@ -78,5 +81,4 @@ public class MessageDeleteService {
                 message.getDeletedAt()
         );
     }
-
 }

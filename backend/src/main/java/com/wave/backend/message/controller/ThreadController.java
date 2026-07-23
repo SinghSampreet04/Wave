@@ -2,7 +2,6 @@ package com.wave.backend.message.controller;
 
 import com.wave.backend.message.dto.ReplyMessageRequest;
 import com.wave.backend.message.dto.ThreadResponse;
-import com.wave.backend.message.entity.Message;
 import com.wave.backend.message.service.ThreadService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +28,7 @@ public class ThreadController {
     }
 
     @GetMapping("/{messageId}")
-    public List<Message> getReplies(
+    public List<ThreadResponse> getReplies(
             @PathVariable Long messageId
     ) {
         return threadService.getReplies(messageId);

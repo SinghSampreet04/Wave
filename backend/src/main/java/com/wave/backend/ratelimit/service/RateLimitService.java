@@ -20,68 +20,25 @@ public class RateLimitService {
             long windowSeconds
     ) {
 
-        System.out.println();
-        System.out.println("========== RATE LIMIT ==========");
-        System.out.println("Key: " + key);
-        System.out.println("Max Requests: " + maxRequests);
-        System.out.println("Window Seconds: " + windowSeconds);
+        Long currentRequests = redisTemplate.opsForValue().increment(key);
 
-        try {
-
-            Long currentRequests = redisTemplate.opsForValue().increment(key);
-
-            System.out.println("Current Requests: " + currentRequests);
-
-            if (currentRequests == null) {
-                System.out.println("Redis returned NULL.");
-                System.out.println("===============================");
-                return false;
-            }
-
-            if (currentRequests == 1) {
-
-                boolean expirationSet = Boolean.TRUE.equals(
-                        redisTemplate.expire(
-                                key,
-                                Duration.ofSeconds(windowSeconds)
-                        )
-                );
-
-                System.out.println("Expiration Set: " + expirationSet);
-
-            }
-
-            Long ttl = redisTemplate.getExpire(key);
-
-            System.out.println("TTL: " + ttl);
-
-            boolean allowed = currentRequests <= maxRequests;
-
-            System.out.println("Allowed: " + allowed);
-            System.out.println("===============================");
-            System.out.println();
-
-            return allowed;
-
-        } catch (Exception ex) {
-
-            System.out.println("Rate Limit Exception:");
-            ex.printStackTrace();
-
-            System.out.println("===============================");
-            System.out.println();
-
-            throw ex;
-
+        if (currentRequests == null) {
+            return false;
         }
 
+        if (currentRequests == 1) {
+            redisTemplate.expire(
+                    key,
+                    Duration.ofSeconds(windowSeconds)
+            );
+        }
+
+        return currentRequests <= maxRequests;
     }
 
     public long getRemainingTime(String key) {
 
         Long ttl = redisTemplate.getExpire(key);
-
-        System.out.println("Remaining TTL for key '" + key + "' = " + ttl);
 
         return ttl == null ? 0 : ttl;
 

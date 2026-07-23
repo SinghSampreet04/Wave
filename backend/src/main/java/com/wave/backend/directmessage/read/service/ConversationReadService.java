@@ -11,6 +11,7 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ConversationReadService {
@@ -32,6 +33,7 @@ public class ConversationReadService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public void markConversationAsRead(
             Long conversationId,
             Long messageId
@@ -57,6 +59,13 @@ public class ConversationReadService {
                                 "Message not found."
                         ));
 
+        validateParticipant(conversation, currentUser);
+        if (!message.getConversation().getId().equals(conversation.getId())) {
+            throw new IllegalArgumentException(
+                    "Message does not belong to this conversation."
+            );
+        }
+
         ConversationReadState readState =
                 readStateRepository
                         .findByConversationAndUser(
@@ -81,6 +90,7 @@ public class ConversationReadService {
 
     }
 
+    @Transactional(readOnly = true)
     public long getUnreadCount(
             Long conversationId
     ) {
@@ -98,6 +108,14 @@ public class ConversationReadService {
                                 "Conversation not found."
                         ));
 
+        validateParticipant(conversation, currentUser);
+        return getUnreadCount(conversation, currentUser);
+    }
+
+    public long getUnreadCount(
+            Conversation conversation,
+            User currentUser
+    ) {
         ConversationReadState readState =
                 readStateRepository
                         .findByConversationAndUser(
@@ -113,7 +131,11 @@ public class ConversationReadService {
                     .findByConversationOrderByCreatedAtAsc(
                             conversation
                     )
-                    .size();
+                    .stream()
+                    .filter(message ->
+                            !message.getSender().getId().equals(currentUser.getId())
+                    )
+                    .count();
 
         }
 
@@ -129,9 +151,24 @@ public class ConversationReadService {
                 .stream()
                 .filter(message ->
                         message.getId() > lastReadId
+                                && !message.getSender().getId()
+                                .equals(currentUser.getId())
                 )
                 .count();
 
+    }
+
+    private void validateParticipant(
+            Conversation conversation,
+            User currentUser
+    ) {
+        if (!conversation.getUserOne().getId().equals(currentUser.getId())
+                && !conversation.getUserTwo().getId()
+                .equals(currentUser.getId())) {
+            throw new IllegalArgumentException(
+                    "You are not part of this conversation."
+            );
+        }
     }
 
 }

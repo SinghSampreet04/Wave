@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 public class SecurityConfig {
 
@@ -44,6 +46,21 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Authentication required."
+                                )
+                        )
+                        .accessDeniedHandler((request, response, exception) ->
+                                response.sendError(
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        "Access denied."
+                                )
+                        )
+                )
+
                 .authorizeHttpRequests(auth -> auth
 
             .requestMatchers(
@@ -54,7 +71,8 @@ public class SecurityConfig {
     "/ws/**",
     "/api/v1/ws/**",
 
-    "/actuator/**",
+    "/actuator/health",
+    "/actuator/info",
 
     "/swagger-ui/**",
     "/swagger-ui.html",

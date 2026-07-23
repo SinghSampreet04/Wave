@@ -17,6 +17,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -41,42 +42,31 @@ public class AuthService {
         this.metricsService = metricsService;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        String username = request.getUsername().trim();
 
-        System.out.println("----- ENTERED AUTH SERVICE -----");
-
-        System.out.println("Checking email...");
-        if (userRepository.existsByEmail(request.getEmail())) {
-            System.out.println("Email already exists.");
+        if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email already exists.");
         }
 
-        System.out.println("Checking username...");
-        if (userRepository.existsByUsername(request.getUsername())) {
-            System.out.println("Username already exists.");
+        if (userRepository.existsByUsername(username)) {
             throw new UsernameAlreadyExistsException("Username already exists.");
         }
-
-        System.out.println("Creating user...");
 
         User user = new User();
 
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.USER);
 
-        System.out.println("Saving user...");
-
         userRepository.save(user);
 
-        System.out.println("User saved.");
-
         metricsService.incrementUsersRegistered();
-
-        System.out.println("Returning success response.");
 
         return new AuthResponse(
                 "User registered successfully."
@@ -84,12 +74,13 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
 
         try {
 
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
+                            email,
                             request.getPassword()
                     )
             );
@@ -104,7 +95,7 @@ public class AuthService {
         }
 
         String accessToken =
-                jwtService.generateAccessToken(request.getEmail());
+                jwtService.generateAccessToken(email);
 
         metricsService.incrementSuccessfulLogins();
 

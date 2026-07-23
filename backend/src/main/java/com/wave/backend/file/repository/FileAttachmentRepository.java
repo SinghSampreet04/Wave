@@ -13,4 +13,6 @@ public interface FileAttachmentRepository
 
     List<FileAttachment> findByMessageId(Long messageId);
 
+    boolean existsByMessageId(Long messageId);
+
 }

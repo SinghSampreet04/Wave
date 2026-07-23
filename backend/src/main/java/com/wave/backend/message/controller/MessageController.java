@@ -1,9 +1,12 @@
 package com.wave.backend.message.controller;
 
 import com.wave.backend.message.dto.CreateMessageRequest;
-import com.wave.backend.message.dto.MessageEditResponse;
+import com.wave.backend.message.dto.MessageDeleteResponse;
 import com.wave.backend.message.dto.MessageResponse;
+import com.wave.backend.message.dto.MessageContextResponse;
+import com.wave.backend.message.dto.MessageHistoryResponse;
 import com.wave.backend.message.dto.UpdateMessageRequest;
+import com.wave.backend.message.service.MessageDeleteService;
 import com.wave.backend.message.service.MessageEditService;
 import com.wave.backend.message.service.MessageService;
 import jakarta.validation.Valid;
@@ -17,13 +20,16 @@ public class MessageController {
 
     private final MessageService messageService;
     private final MessageEditService messageEditService;
+    private final MessageDeleteService messageDeleteService;
 
     public MessageController(
             MessageService messageService,
-            MessageEditService messageEditService
+            MessageEditService messageEditService,
+            MessageDeleteService messageDeleteService
     ) {
         this.messageService = messageService;
         this.messageEditService = messageEditService;
+        this.messageDeleteService = messageDeleteService;
     }
 
     @PostMapping
@@ -40,8 +46,17 @@ public class MessageController {
         return messageService.getChannelMessages(channelId);
     }
 
+    @GetMapping("/channel/{channelId}/history")
+    public MessageHistoryResponse getChannelHistory(
+            @PathVariable Long channelId,
+            @RequestParam(required = false) Long before,
+            @RequestParam(defaultValue = "50") int size
+    ) {
+        return messageService.getChannelHistory(channelId, before, size);
+    }
+
     @PatchMapping("/{messageId}")
-    public MessageEditResponse editMessage(
+    public MessageResponse editMessage(
             @PathVariable Long messageId,
             @Valid @RequestBody UpdateMessageRequest request
     ) {
@@ -51,4 +66,19 @@ public class MessageController {
         );
     }
 
+    @GetMapping("/{messageId}/context")
+    public MessageContextResponse getMessageContext(
+            @PathVariable Long messageId
+    ) {
+        return messageService.getMessageContext(messageId);
+    }
+
+    @DeleteMapping("/{messageId}")
+    public MessageDeleteResponse deleteMessage(
+            @PathVariable Long messageId
+    ) {
+        return messageDeleteService.deleteMessage(
+                messageId
+        );
+    }
 }

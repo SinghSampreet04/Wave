@@ -12,22 +12,29 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.wave.backend.directreaction.dto.DirectReactionEventResponse;
 
 @Service
+@Transactional
 public class DirectReactionService {
 
     private final DirectReactionRepository directReactionRepository;
     private final DirectMessageRepository directMessageRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public DirectReactionService(
             DirectReactionRepository directReactionRepository,
             DirectMessageRepository directMessageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate
     ) {
         this.directReactionRepository = directReactionRepository;
         this.directMessageRepository = directMessageRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public DirectReactionResponse react(
@@ -98,6 +105,17 @@ public class DirectReactionService {
                                 directMessage,
                                 request.getEmoji()
                         );
+
+        messagingTemplate.convertAndSend(
+                "/topic/conversations/" + conversation.getId() + "/reactions",
+                new DirectReactionEventResponse(
+                        directMessage.getId(),
+                        request.getEmoji(),
+                        count,
+                        currentUser.getId(),
+                        reacted
+                )
+        );
 
         return new DirectReactionResponse(
                 directMessage.getId(),

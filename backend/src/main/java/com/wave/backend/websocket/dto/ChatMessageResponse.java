@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ChatMessageResponse {
 
-    private Long messageId;
+    private Long id;
 
     private Long channelId;
 
@@ -19,6 +19,6 @@ public class ChatMessageResponse {
 
     private String content;
 
-    private LocalDateTime sentAt;
+    private LocalDateTime createdAt;
 
 }

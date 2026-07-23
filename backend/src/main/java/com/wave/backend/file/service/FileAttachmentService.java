@@ -15,11 +15,13 @@ import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class FileAttachmentService {
 
     private final FileAttachmentRepository fileAttachmentRepository;
@@ -138,7 +140,7 @@ public class FileAttachmentService {
 
     }
 
-    public List<FileAttachment> getFilesForMessage(
+    public List<FileDownloadResponse> getFilesForMessage(
             Long messageId
     ) {
 
@@ -153,7 +155,15 @@ public class FileAttachmentService {
                 currentUser
         );
 
-        return fileAttachmentRepository.findByMessageId(messageId);
+        return fileAttachmentRepository.findByMessageId(messageId)
+                .stream()
+                .map(attachment -> new FileDownloadResponse(
+                        attachment.getId(),
+                        attachment.getOriginalFilename(),
+                        attachment.getContentType(),
+                        attachment.getFileSize()
+                ))
+                .toList();
 
     }
 

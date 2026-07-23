@@ -15,9 +15,18 @@ import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 @Service
+@Transactional
 public class ReactionService {
+
+    private static final Set<String> SUPPORTED_EMOJIS = Set.of(
+            "😀", "😂", "❤️", "👍", "🎉", "🔥",
+            "👏", "😮", "😢", "🤔", "👀", "🚀"
+    );
 
     private final ReactionRepository reactionRepository;
     private final MessageRepository messageRepository;
@@ -40,6 +49,9 @@ public class ReactionService {
     }
 
     public ReactionResponse react(CreateReactionRequest request) {
+        if (!SUPPORTED_EMOJIS.contains(request.getEmoji())) {
+            throw new IllegalArgumentException("Unsupported reaction.");
+        }
 
         String email = SecurityUtil.getCurrentUserEmail();
 
@@ -96,6 +108,7 @@ public class ReactionService {
                         message.getChannel().getId(),
                         request.getEmoji(),
                         count,
+                        user.getId(),
                         reacted
                 )
         );

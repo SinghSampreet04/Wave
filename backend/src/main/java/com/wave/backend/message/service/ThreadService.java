@@ -16,10 +16,12 @@ import com.wave.backend.workspace.entity.Workspace;
 import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class ThreadService {
 
     private final MessageRepository messageRepository;
@@ -67,7 +69,7 @@ public class ThreadService {
                         new WorkspaceAccessDeniedException(
                                 "Access denied."));
 
-        // NEW: Enforce private channel membership
+        // Enforce private channel membership
         channelMemberService.validateChannelAccess(
                 parent.getChannel(),
                 sender
@@ -102,19 +104,42 @@ public class ThreadService {
                 reply.getContent(),
                 reply.getCreatedAt()
         );
-
     }
 
-    public List<Message> getReplies(
+    @Transactional(readOnly = true)
+    public List<ThreadResponse> getReplies(
             Long parentMessageId
     ) {
+
+        String email = SecurityUtil.getCurrentUserEmail();
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
 
         Message parent = messageRepository.findById(parentMessageId)
                 .orElseThrow(() ->
                         new MessageNotFoundException("Message not found."));
 
-        return messageRepository.findByParentMessageOrderByCreatedAtAsc(parent);
+        Workspace workspace = parent.getChannel().getWorkspace();
 
+        workspaceMemberRepository
+                .findByWorkspaceAndUser(workspace, currentUser)
+                .orElseThrow(() ->
+                        new WorkspaceAccessDeniedException("Access denied."));
+
+        channelMemberService.validateChannelAccess(parent.getChannel(), currentUser);
+
+        return messageRepository.findByParentMessageOrderByCreatedAtAsc(parent)
+                .stream()
+                .map(reply -> new ThreadResponse(
+                        reply.getId(),
+                        parent.getId(),
+                        reply.getSender().getId(),
+                        reply.getSender().getUsername(),
+                        reply.getContent(),
+                        reply.getCreatedAt()
+                ))
+                .toList();
     }
-
 }

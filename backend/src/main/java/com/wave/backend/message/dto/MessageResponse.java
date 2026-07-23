@@ -1,6 +1,10 @@
 package com.wave.backend.message.dto;
 
+import com.wave.backend.reaction.dto.ReactionResponse;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MessageResponse {
 
@@ -18,6 +22,8 @@ public class MessageResponse {
 
     private boolean deleted;
 
+    private List<ReactionResponse> reactions = new ArrayList<>();
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -33,6 +39,7 @@ public class MessageResponse {
             String content,
             boolean edited,
             boolean deleted,
+            List<ReactionResponse> reactions,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -43,6 +50,7 @@ public class MessageResponse {
         this.content = content;
         this.edited = edited;
         this.deleted = deleted;
+        this.reactions = reactions;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -73,6 +81,10 @@ public class MessageResponse {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public List<ReactionResponse> getReactions() {
+        return reactions;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -109,6 +121,10 @@ public class MessageResponse {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public void setReactions(List<ReactionResponse> reactions) {
+        this.reactions = reactions;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

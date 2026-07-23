@@ -21,6 +21,7 @@ public class ConversationResponse {
     private LocalDateTime lastMessageAt;
 
     private LocalDateTime createdAt;
+    private long unreadCount;
 
     public ConversationResponse() {
     }
@@ -34,7 +35,8 @@ public class ConversationResponse {
             String otherAvatar,
             String lastMessage,
             LocalDateTime lastMessageAt,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            long unreadCount
     ) {
         this.conversationId = conversationId;
         this.otherUserId = otherUserId;
@@ -45,6 +47,7 @@ public class ConversationResponse {
         this.lastMessage = lastMessage;
         this.lastMessageAt = lastMessageAt;
         this.createdAt = createdAt;
+        this.unreadCount = unreadCount;
     }
 
     public Long getConversationId() {
@@ -117,6 +120,14 @@ public class ConversationResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public long getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(long unreadCount) {
+        this.unreadCount = unreadCount;
     }
 
 }

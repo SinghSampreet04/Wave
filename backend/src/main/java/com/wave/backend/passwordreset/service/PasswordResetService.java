@@ -9,6 +9,7 @@ import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,26 +24,34 @@ public class PasswordResetService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final MetricsService metricsService;
+    private final String frontendUrl;
 
     public PasswordResetService(
             UserRepository userRepository,
             PasswordResetTokenRepository tokenRepository,
             EmailService emailService,
             PasswordEncoder passwordEncoder,
-            MetricsService metricsService
+            MetricsService metricsService,
+            @Value("${wave.frontend-url:http://localhost:5173}")
+            String frontendUrl
     ) {
         this.userRepository = userRepository;
         this.tokenRepository = tokenRepository;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.metricsService = metricsService;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
     }
 
     @Transactional
     public void forgotPassword(String email) throws MessagingException {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        // Do not reveal whether an account exists for the submitted address.
+        if (user == null) {
+            return;
+        }
 
         tokenRepository.deleteByUserId(user.getId());
 
@@ -56,7 +65,7 @@ public class PasswordResetService {
         tokenRepository.save(token);
 
         String resetLink =
-                "http://localhost:3000/reset-password?token=" + token.getToken();
+                frontendUrl + "/reset-password?token=" + token.getToken();
 
         emailService.sendHtmlEmail(
                 user.getEmail(),
@@ -99,10 +108,10 @@ public class PasswordResetService {
     public void resetPassword(ResetPasswordRequest request) {
 
         PasswordResetToken token = tokenRepository.findByToken(request.getToken())
-                .orElseThrow(() -> new RuntimeException("Invalid token."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token."));
 
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token expired.");
+            throw new IllegalArgumentException("Token expired.");
         }
 
         User user = token.getUser();

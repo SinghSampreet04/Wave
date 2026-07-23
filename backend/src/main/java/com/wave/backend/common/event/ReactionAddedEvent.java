@@ -12,21 +12,23 @@ public class ReactionAddedEvent {
     private final String emoji;
 
     private final long count;
-
-    private final boolean reactedByCurrentUser;
+    private final Long actorUserId;
+    private final boolean reacted;
 
     public ReactionAddedEvent(
             Long messageId,
             Long channelId,
             String emoji,
             long count,
-            boolean reactedByCurrentUser
+            Long actorUserId,
+            boolean reacted
     ) {
         this.messageId = messageId;
         this.channelId = channelId;
         this.emoji = emoji;
         this.count = count;
-        this.reactedByCurrentUser = reactedByCurrentUser;
+        this.actorUserId = actorUserId;
+        this.reacted = reacted;
     }
 
 }

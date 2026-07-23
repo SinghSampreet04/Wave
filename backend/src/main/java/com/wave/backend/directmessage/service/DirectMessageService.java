@@ -3,6 +3,7 @@ package com.wave.backend.directmessage.service;
 import com.wave.backend.common.event.DirectMessageSentEvent;
 import com.wave.backend.common.util.SecurityUtil;
 import com.wave.backend.directmessage.dto.DirectMessageResponse;
+import com.wave.backend.directmessage.dto.DirectMessageContextResponse;
 import com.wave.backend.directmessage.dto.SendDirectMessageRequest;
 import com.wave.backend.directmessage.entity.Conversation;
 import com.wave.backend.directmessage.entity.DirectMessage;
@@ -16,9 +17,15 @@ import com.wave.backend.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import com.wave.backend.directreaction.repository.DirectReactionRepository;
+import com.wave.backend.directreaction.dto.DirectReactionResponse;
+import com.wave.backend.directreaction.entity.DirectReaction;
 
 @Service
 public class DirectMessageService {
@@ -29,6 +36,7 @@ public class DirectMessageService {
     private final ApplicationEventPublisher eventPublisher;
     private final MentionService mentionService;
     private final MetricsService metricsService;
+    private final DirectReactionRepository directReactionRepository;
 
     public DirectMessageService(
             DirectMessageRepository directMessageRepository,
@@ -36,7 +44,8 @@ public class DirectMessageService {
             UserRepository userRepository,
             ApplicationEventPublisher eventPublisher,
             MentionService mentionService,
-            MetricsService metricsService
+            MetricsService metricsService,
+            DirectReactionRepository directReactionRepository
     ) {
         this.directMessageRepository = directMessageRepository;
         this.conversationRepository = conversationRepository;
@@ -44,13 +53,24 @@ public class DirectMessageService {
         this.eventPublisher = eventPublisher;
         this.mentionService = mentionService;
         this.metricsService = metricsService;
+        this.directReactionRepository = directReactionRepository;
     }
 
+    @Transactional
     public DirectMessageResponse sendMessage(
             SendDirectMessageRequest request
     ) {
 
         String email = SecurityUtil.getCurrentUserEmail();
+
+        return sendMessage(request, email);
+    }
+
+    @Transactional
+    public DirectMessageResponse sendMessage(
+            SendDirectMessageRequest request,
+            String email
+    ) {
 
         User sender = userRepository.findByEmail(email)
                 .orElseThrow(() ->
@@ -100,10 +120,11 @@ public class DirectMessageService {
                 )
         );
 
-        return toResponse(message);
+        return toResponse(message, sender);
 
     }
 
+    @Transactional(readOnly = true)
     public List<DirectMessageResponse> getConversationMessages(
             Long conversationId,
             int page,
@@ -138,14 +159,52 @@ public class DirectMessageService {
                         PageRequest.of(page, size)
                 )
                 .stream()
-                .map(this::toResponse)
+                .map(message -> toResponse(message, currentUser))
                 .toList();
 
     }
 
+    @Transactional(readOnly = true)
+    public DirectMessageContextResponse getMessageContext(Long messageId) {
+        String email = SecurityUtil.getCurrentUserEmail();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found."));
+        DirectMessage message = directMessageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Direct message not found."
+                        ));
+        Conversation conversation = message.getConversation();
+        if (!conversation.getUserOne().getId().equals(currentUser.getId())
+                && !conversation.getUserTwo().getId()
+                .equals(currentUser.getId())) {
+            throw new IllegalArgumentException(
+                    "You are not part of this conversation."
+            );
+        }
+        return new DirectMessageContextResponse(
+                message.getId(),
+                conversation.getId()
+        );
+    }
+
     private DirectMessageResponse toResponse(
-            DirectMessage message
+            DirectMessage message,
+            User currentUser
     ) {
+        Map<String, DirectReactionResponse> grouped = new LinkedHashMap<>();
+        for (DirectReaction reaction :
+                directReactionRepository.findAllByDirectMessageOrderByEmojiAsc(message)) {
+            DirectReactionResponse response = grouped.computeIfAbsent(
+                    reaction.getEmoji(),
+                    emoji -> new DirectReactionResponse(message.getId(), emoji, 0, false)
+            );
+            response.setCount(response.getCount() + 1);
+            if (reaction.getUser().getId().equals(currentUser.getId())) {
+                response.setReacted(true);
+            }
+        }
 
         return new DirectMessageResponse(
                 message.getId(),
@@ -156,7 +215,8 @@ public class DirectMessageService {
                 message.isEdited(),
                 message.isDeleted(),
                 message.getCreatedAt(),
-                message.getUpdatedAt()
+                message.getUpdatedAt(),
+                List.copyOf(grouped.values())
         );
 
     }

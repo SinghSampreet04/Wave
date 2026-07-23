@@ -21,9 +21,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class DirectAttachmentService {
 
     private static final String UPLOAD_DIRECTORY =
@@ -80,9 +83,13 @@ public class DirectAttachmentService {
                 currentUser,
                 directMessage.getConversation()
         );
+        validateMessageOwner(currentUser, directMessage);
 
         String originalFilename =
                 StringUtils.cleanPath(file.getOriginalFilename());
+        if (originalFilename.contains("..")) {
+            throw new IllegalArgumentException("Invalid file name.");
+        }
 
         String storedFilename =
                 UUID.randomUUID() + "_" + originalFilename;
@@ -156,6 +163,31 @@ public class DirectAttachmentService {
 
     }
 
+    @Transactional(readOnly = true)
+    public List<DirectAttachmentResponse> getMessageAttachments(
+            Long directMessageId
+    ) {
+        User currentUser = getCurrentUser();
+        DirectMessage directMessage =
+                directMessageRepository.findById(directMessageId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Direct message not found."
+                                ));
+        validateParticipant(currentUser, directMessage.getConversation());
+        return attachmentRepository.findByDirectMessage(directMessage)
+                .stream()
+                .map(attachment -> new DirectAttachmentResponse(
+                        attachment.getId(),
+                        directMessage.getId(),
+                        attachment.getOriginalFileName(),
+                        attachment.getContentType(),
+                        attachment.getFileSize(),
+                        attachment.getUploadedAt()
+                ))
+                .toList();
+    }
+
     public DeleteDirectAttachmentResponse deleteAttachment(
             Long attachmentId
     ) throws IOException {
@@ -173,6 +205,7 @@ public class DirectAttachmentService {
                 currentUser,
                 attachment.getDirectMessage().getConversation()
         );
+        validateMessageOwner(currentUser, attachment.getDirectMessage());
 
         Files.deleteIfExists(
                 Paths.get(attachment.getFilePath())
@@ -219,6 +252,17 @@ public class DirectAttachmentService {
 
         }
 
+    }
+
+    private void validateMessageOwner(
+            User currentUser,
+            DirectMessage directMessage
+    ) {
+        if (!directMessage.getSender().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException(
+                    "Only the message author can change attachments."
+            );
+        }
     }
 
     private void validateFile(

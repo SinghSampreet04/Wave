@@ -78,7 +78,7 @@ public class FileController {
     }
 
     @GetMapping("/message/{messageId}")
-    public List<FileAttachment> getFilesForMessage(
+    public List<FileDownloadResponse> getFilesForMessage(
             @PathVariable Long messageId
     ) {
 

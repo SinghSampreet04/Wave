@@ -8,6 +8,7 @@
 # ===============================
 .env
 .env.*
+!**/.env.example
 
 # ===============================
 # Logs
@@ -34,9 +35,16 @@ backend/.mvn/wrapper/maven-wrapper.jar
 # ===============================
 # React
 # ===============================
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/build/
+frontend/test-results/
+frontend/playwright-report/
+# Local starter projects and obsolete root npm scratch files are not part of Wave.
+frontend/websocket-test/
+/package.json
+/package-lock.json
 
 # ===============================
 # OS Files

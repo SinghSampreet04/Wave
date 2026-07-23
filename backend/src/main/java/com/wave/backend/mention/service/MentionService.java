@@ -169,6 +169,22 @@ public class MentionService {
                 continue;
             }
 
+            if (message != null
+                    && mentionRepository.existsByMessageAndMentionedUser(
+                            message,
+                            mentionedUser
+                    )) {
+                continue;
+            }
+
+            if (directMessage != null
+                    && mentionRepository.existsByDirectMessageAndMentionedUser(
+                            directMessage,
+                            mentionedUser
+                    )) {
+                continue;
+            }
+
             Mention mention =
                     new Mention();
 

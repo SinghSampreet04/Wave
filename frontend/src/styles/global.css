@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@import "./variables.css";
+@import "./theme.css";
+@import "./animations.css";
+
+/* ------------------------------------------------ */
+/* Root */
+/* ------------------------------------------------ */
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-rendering: optimizeLegibility;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(34, 211, 238, 0.08),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(59, 130, 246, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at bottom,
+      rgba(139, 92, 246, 0.08),
+      transparent 34%
+    ),
+    #040814;
+
+  color: white;
+}
+
+/* ------------------------------------------------ */
+/* Selection */
+/* ------------------------------------------------ */
+
+::selection {
+  background: rgba(34, 211, 238, 0.35);
+  color: white;
+}
+
+/* ------------------------------------------------ */
+/* Scrollbars */
+/* ------------------------------------------------ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  background: rgba(148, 163, 184, 0.35);
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 213, 225, 0.65);
+}
+
+/* ------------------------------------------------ */
+/* Focus */
+/* ------------------------------------------------ */
+
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(8, 17, 32, 1),
+    0 0 0 4px rgba(34, 211, 238, 0.45);
+}
+
+/* ------------------------------------------------ */
+/* Images */
+/* ------------------------------------------------ */
+
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ------------------------------------------------ */
+/* Better defaults */
+/* ------------------------------------------------ */
+
+button,
+input,
+textarea,
+select {
+  transition:
+    background-color .18s ease,
+    border-color .18s ease,
+    color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease,
+    opacity .18s ease;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+a {
+  transition: color .18s ease;
+}

@@ -10,6 +10,7 @@ import com.wave.backend.exception.ChannelNotFoundException;
 import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
+import com.wave.backend.workspace.repository.WorkspaceMemberRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,15 +21,18 @@ public class ChannelMemberService {
     private final ChannelMemberRepository channelMemberRepository;
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
 
     public ChannelMemberService(
             ChannelMemberRepository channelMemberRepository,
             ChannelRepository channelRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            WorkspaceMemberRepository workspaceMemberRepository
     ) {
         this.channelMemberRepository = channelMemberRepository;
         this.channelRepository = channelRepository;
         this.userRepository = userRepository;
+        this.workspaceMemberRepository = workspaceMemberRepository;
     }
 
     public ChannelMemberResponse joinChannel(Long channelId) {
@@ -38,6 +42,8 @@ public class ChannelMemberService {
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
                         new ChannelNotFoundException("Channel not found."));
+
+        validateWorkspaceMembership(channel, currentUser);
 
         if (channelMemberRepository.existsByChannelAndUser(channel, currentUser)) {
             throw new IllegalArgumentException(
@@ -74,9 +80,13 @@ public class ChannelMemberService {
 
     public List<ChannelMemberResponse> getMembers(Long channelId) {
 
+        User currentUser = getCurrentUser();
+
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() ->
                         new ChannelNotFoundException("Channel not found."));
+
+        validateChannelAccess(channel, currentUser);
 
         return channelMemberRepository.findByChannel(channel)
                 .stream()
@@ -96,6 +106,8 @@ public class ChannelMemberService {
             User user
     ) {
 
+        validateWorkspaceMembership(channel, user);
+
         if (!channel.isPrivate()) {
             return;
         }
@@ -113,6 +125,28 @@ public class ChannelMemberService {
             User user
     ) {
         return channelMemberRepository.existsByChannelAndUser(channel, user);
+    }
+
+    public boolean isWorkspaceMember(Long workspaceId, User user) {
+        return workspaceMemberRepository.findByUser(user)
+                .stream()
+                .anyMatch(member ->
+                        member.getWorkspace().getId().equals(workspaceId)
+                );
+    }
+
+    private void validateWorkspaceMembership(
+            Channel channel,
+            User user
+    ) {
+        if (!workspaceMemberRepository.existsByWorkspaceAndUser(
+                channel.getWorkspace(),
+                user
+        )) {
+            throw new IllegalArgumentException(
+                    "You are not a member of this workspace."
+            );
+        }
     }
 
     private User getCurrentUser() {

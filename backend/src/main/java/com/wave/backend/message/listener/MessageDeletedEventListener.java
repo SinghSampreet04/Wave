@@ -31,9 +31,9 @@ public class MessageDeletedEventListener {
                 );
 
         messagingTemplate.convertAndSend(
-                "/topic/channel/" + event.getChannelId(),
-                response
-        );
+    "/topic/channels/" + event.getChannelId() + "/deleted",
+    response
+);
 
     }
 

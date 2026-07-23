@@ -10,6 +10,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -56,7 +57,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
 
-                if (jwtService.isTokenValid(jwt, userDetails.getUsername())) {
+                boolean valid =
+                        jwtService.isTokenValid(jwt, userDetails.getUsername());
+
+                if (valid) {
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
@@ -75,10 +79,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-        } catch (JwtException | IllegalArgumentException ex) {
-            // Ignore invalid or expired JWTs and continue the request.
-            // Protected endpoints will still require authentication,
-            // but public endpoints such as /auth/login can proceed.
+        } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ex) {
+            // Leave the request unauthenticated; Spring Security returns 401 for
+            // protected routes without exposing token parsing details.
         }
 
         filterChain.doFilter(request, response);

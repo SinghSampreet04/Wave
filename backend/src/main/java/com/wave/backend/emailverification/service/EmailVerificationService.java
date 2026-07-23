@@ -7,6 +7,7 @@ import com.wave.backend.metrics.service.MetricsService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,17 +20,21 @@ public class EmailVerificationService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final MetricsService metricsService;
+    private final String frontendUrl;
 
     public EmailVerificationService(
             EmailVerificationTokenRepository tokenRepository,
             UserRepository userRepository,
             EmailService emailService,
-            MetricsService metricsService
+            MetricsService metricsService,
+            @Value("${wave.frontend-url:http://localhost:5173}")
+            String frontendUrl
     ) {
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
         this.emailService = emailService;
         this.metricsService = metricsService;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
     }
 
     @Transactional
@@ -44,7 +49,7 @@ public class EmailVerificationService {
         EmailVerificationToken savedToken = tokenRepository.save(token);
 
         String verificationLink =
-                "http://localhost:3000/verify-email?token=" + savedToken.getToken();
+                frontendUrl + "/verify-email?token=" + savedToken.getToken();
 
         emailService.sendHtmlEmail(
                 user.getEmail(),
@@ -85,10 +90,11 @@ public class EmailVerificationService {
     public void verifyEmail(String tokenValue) {
 
         EmailVerificationToken token = tokenRepository.findByToken(tokenValue)
-                .orElseThrow(() -> new RuntimeException("Invalid verification token."));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Invalid verification token."));
 
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Verification token has expired.");
+            throw new IllegalArgumentException("Verification token has expired.");
         }
 
         User user = token.getUser();

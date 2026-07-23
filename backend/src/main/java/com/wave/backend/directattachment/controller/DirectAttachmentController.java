@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/direct-attachments")
@@ -71,6 +72,13 @@ public class DirectAttachmentController {
                 )
                 .body(resource);
 
+    }
+
+    @GetMapping("/message/{directMessageId}")
+    public List<DirectAttachmentResponse> getMessageAttachments(
+            @PathVariable Long directMessageId
+    ) {
+        return directAttachmentService.getMessageAttachments(directMessageId);
     }
 
     @DeleteMapping("/{attachmentId}")

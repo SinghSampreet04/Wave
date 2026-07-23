@@ -1,6 +1,7 @@
 package com.wave.backend.message.entity;
 
 import com.wave.backend.channel.entity.Channel;
+import com.wave.backend.reaction.entity.Reaction;
 import com.wave.backend.user.entity.User;
 import jakarta.persistence.*;
 
@@ -33,6 +34,13 @@ public class Message {
 
     @OneToMany(mappedBy = "parentMessage")
     private List<Message> replies = new ArrayList<>();
+
+    @OneToMany(
+            mappedBy = "message",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Reaction> reactions = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean edited = false;
@@ -88,6 +96,10 @@ public class Message {
         return replies;
     }
 
+    public List<Reaction> getReactions() {
+        return reactions;
+    }
+
     public boolean isEdited() {
         return edited;
     }
@@ -134,6 +146,10 @@ public class Message {
 
     public void setReplies(List<Message> replies) {
         this.replies = replies;
+    }
+
+    public void setReactions(List<Reaction> reactions) {
+        this.reactions = reactions;
     }
 
     public void setEdited(boolean edited) {

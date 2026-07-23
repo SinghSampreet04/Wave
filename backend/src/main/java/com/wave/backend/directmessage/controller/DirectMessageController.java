@@ -3,6 +3,7 @@ package com.wave.backend.directmessage.controller;
 import com.wave.backend.directmessage.dto.DirectMessageDeleteResponse;
 import com.wave.backend.directmessage.dto.DirectMessageEditResponse;
 import com.wave.backend.directmessage.dto.DirectMessageResponse;
+import com.wave.backend.directmessage.dto.DirectMessageContextResponse;
 import com.wave.backend.directmessage.dto.DirectMessageSearchResponse;
 import com.wave.backend.directmessage.dto.SendDirectMessageRequest;
 import com.wave.backend.directmessage.dto.UpdateDirectMessageRequest;
@@ -71,6 +72,13 @@ public class DirectMessageController {
                 query
         );
 
+    }
+
+    @GetMapping("/{messageId}/context")
+    public DirectMessageContextResponse getMessageContext(
+            @PathVariable Long messageId
+    ) {
+        return directMessageService.getMessageContext(messageId);
     }
 
     @PatchMapping("/{messageId}")

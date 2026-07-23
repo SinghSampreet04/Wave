@@ -1,7 +1,7 @@
 package com.wave.backend.reaction.listener;
 
 import com.wave.backend.common.event.ReactionAddedEvent;
-import com.wave.backend.reaction.dto.ReactionResponse;
+import com.wave.backend.reaction.dto.ReactionEventResponse;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -22,18 +22,18 @@ public class ReactionEventListener {
             ReactionAddedEvent event
     ) {
 
-        ReactionResponse response =
-                new ReactionResponse(
+        ReactionEventResponse response =
+                new ReactionEventResponse(
                         event.getMessageId(),
                         event.getEmoji(),
                         event.getCount(),
-                        event.isReactedByCurrentUser()
+                        event.getActorUserId(),
+                        event.isReacted()
                 );
 
         messagingTemplate.convertAndSend(
-                "/topic/channel/" + event.getChannelId(),
+                "/topic/channels/" + event.getChannelId() + "/reactions",
                 response
         );
     }
-
 }

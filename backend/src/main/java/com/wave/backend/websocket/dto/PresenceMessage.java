@@ -1,20 +1,10 @@
 package com.wave.backend.websocket.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.wave.backend.user.entity.PresenceStatus;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PresenceMessage {
-
-    private Long userId;
-
-    private String username;
-
-    private boolean online;
-
+public record PresenceMessage(
+        Long userId,
+        String username,
+        PresenceStatus status
+) {
 }

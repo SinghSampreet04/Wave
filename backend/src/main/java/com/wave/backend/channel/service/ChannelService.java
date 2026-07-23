@@ -112,6 +112,13 @@ public class ChannelService {
 
         return channelRepository.findByWorkspace(workspace)
                 .stream()
+                .filter(channel ->
+                        !channel.isPrivate()
+                                || channelMemberRepository.existsByChannelAndUser(
+                                        channel,
+                                        user
+                                )
+                )
                 .map(channel -> new ChannelResponse(
                         channel.getId(),
                         channel.getName(),

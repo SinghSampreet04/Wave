@@ -19,6 +19,10 @@ public interface WorkspaceMemberRepository
             User user
     );
 
+    List<WorkspaceMember> findByWorkspace_Id(
+            Long workspaceId
+    );
+
     Optional<WorkspaceMember> findByWorkspaceAndUser(
             Workspace workspace,
             User user

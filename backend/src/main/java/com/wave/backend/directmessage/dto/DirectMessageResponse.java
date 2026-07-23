@@ -1,6 +1,8 @@
 package com.wave.backend.directmessage.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import com.wave.backend.directreaction.dto.DirectReactionResponse;
 
 public class DirectMessageResponse {
 
@@ -21,6 +23,7 @@ public class DirectMessageResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+    private List<DirectReactionResponse> reactions;
 
     public DirectMessageResponse() {
     }
@@ -34,7 +37,8 @@ public class DirectMessageResponse {
             boolean edited,
             boolean deleted,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            List<DirectReactionResponse> reactions
     ) {
         this.messageId = messageId;
         this.conversationId = conversationId;
@@ -45,6 +49,7 @@ public class DirectMessageResponse {
         this.deleted = deleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.reactions = reactions;
     }
 
     public Long getMessageId() {
@@ -118,5 +123,7 @@ public class DirectMessageResponse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+    public List<DirectReactionResponse> getReactions() { return reactions; }
+    public void setReactions(List<DirectReactionResponse> reactions) { this.reactions = reactions; }
 
 }
