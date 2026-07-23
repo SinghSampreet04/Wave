@@ -11,10 +11,12 @@ import com.wave.backend.notification.service.NotificationService;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
+@Transactional
 public class ChannelInvitationDeclineService {
 
     private final ChannelInvitationRepository invitationRepository;

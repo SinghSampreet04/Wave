@@ -8,6 +8,7 @@ import com.wave.backend.exception.UserNotFoundException;
 import com.wave.backend.user.entity.User;
 import com.wave.backend.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -55,6 +56,7 @@ public class ChannelInvitationService {
         return declineService.decline(invitationId);
     }
 
+    @Transactional(readOnly = true)
     public List<ChannelInvitationResponse> getMyInvitations() {
 
         String email = SecurityUtil.getCurrentUserEmail();

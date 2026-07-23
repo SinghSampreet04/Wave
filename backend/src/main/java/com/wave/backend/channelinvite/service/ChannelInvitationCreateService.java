@@ -20,8 +20,10 @@ import com.wave.backend.channelinvite.entity.ChannelInvitation;
 import com.wave.backend.channelinvite.entity.ChannelInvitationStatus;
 import com.wave.backend.channelinvite.repository.ChannelInvitationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class ChannelInvitationCreateService {
 
     private final ChannelInvitationRepository invitationRepository;

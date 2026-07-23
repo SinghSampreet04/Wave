@@ -23,8 +23,43 @@ export async function inviteWorkspaceMember(
   request: InviteWorkspaceMemberRequest
 ): Promise<void> {
   await api.post(
-    `/v1/workspaces/${workspaceId}/members/invite`,
-    request
+    "/v1/workspace-invitations",
+    {
+      workspaceId,
+      inviteeEmail:
+        request.email.trim(),
+    }
+  );
+}
+
+export interface WorkspaceInvitation {
+  id: number;
+  workspaceId: number;
+  workspaceName: string;
+  inviterUsername: string;
+  status:
+    | "PENDING"
+    | "ACCEPTED"
+    | "DECLINED"
+    | "EXPIRED";
+}
+
+export async function getMyWorkspaceInvitations(): Promise<
+  WorkspaceInvitation[]
+> {
+  const response = await api.get<
+    WorkspaceInvitation[]
+  >(
+    "/v1/workspace-invitations/me"
+  );
+  return response.data;
+}
+
+export async function acceptWorkspaceInvitation(
+  invitationId: number
+): Promise<void> {
+  await api.patch(
+    `/v1/workspace-invitations/${invitationId}/accept`
   );
 }
 

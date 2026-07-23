@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -54,7 +55,7 @@ export default function InviteMemberDialog() {
       return;
     }
 
-    toast.success("Member invited successfully.");
+    toast.success("Workspace invitation sent.");
 
     reset();
 
@@ -77,9 +78,15 @@ export default function InviteMemberDialog() {
         },
       },
       {
-        onError: () => {
+        onError: (error) => {
+          const message =
+            error instanceof AxiosError
+              ? error.response?.data
+                  ?.message ??
+                "Failed to invite member."
+              : "Failed to invite member.";
           toast.error(
-            "Failed to invite member."
+            message
           );
         },
       }
@@ -104,6 +111,11 @@ export default function InviteMemberDialog() {
           error={errors.email?.message}
           {...register("email")}
         />
+        <p className="-mt-2 text-xs leading-5 text-slate-400">
+          The person must already have a registered
+          Wave account. They can accept the invitation
+          from their notification center.
+        </p>
 
         <div className="flex gap-3 pt-2">
           <Button

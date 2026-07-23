@@ -20,7 +20,11 @@ import {
 } from "./api";
 import type { Notification } from "./types";
 import api from "../../api/axios";
-import { getWorkspaces } from "../workspace/api/workspaceApi";
+import {
+  acceptWorkspaceInvitation,
+  getMyWorkspaceInvitations,
+  getWorkspaces,
+} from "../workspace/api/workspaceApi";
 import {
   acceptChannelInvitation,
   getMyChannelInvitations,
@@ -182,7 +186,42 @@ export default function NotificationCenter() {
     }
 
     if (
+      notification.type === "WORKSPACE_INVITE" &&
+      notification.title === "Workspace Invitation" &&
+      notification.referenceId
+    ) {
+      try {
+        const invitations =
+          await getMyWorkspaceInvitations();
+        const invitation = invitations.find(
+          (item) =>
+            item.workspaceId ===
+              notification.referenceId &&
+            item.status === "PENDING"
+        );
+        if (invitation) {
+          await acceptWorkspaceInvitation(
+            invitation.id
+          );
+          await queryClient.invalidateQueries({
+            queryKey: ["workspaces"],
+          });
+          toast.success(
+            `Joined ${invitation.workspaceName}.`
+          );
+        }
+        setOpen(false);
+      } catch {
+        toast.error(
+          "Unable to accept this workspace invitation."
+        );
+      }
+      return;
+    }
+
+    if (
       notification.type === "CHANNEL_INVITE" &&
+      notification.title === "Channel Invitation" &&
       notification.referenceId
     ) {
       try {
@@ -377,8 +416,14 @@ export default function NotificationCenter() {
                           notification.createdAt
                         ).toLocaleString()}
                       </span>
-                      {notification.type ===
-                        "CHANNEL_INVITE" && (
+                      {((notification.type ===
+                        "CHANNEL_INVITE" &&
+                        notification.title ===
+                          "Channel Invitation") ||
+                        (notification.type ===
+                          "WORKSPACE_INVITE" &&
+                          notification.title ===
+                            "Workspace Invitation")) && (
                         <span className="mt-2 block text-xs font-semibold text-cyan-300">
                           Click to accept invitation
                         </span>

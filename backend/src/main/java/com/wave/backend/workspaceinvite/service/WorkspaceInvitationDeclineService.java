@@ -11,10 +11,12 @@ import com.wave.backend.workspaceinvite.entity.WorkspaceInvitation;
 import com.wave.backend.workspaceinvite.entity.WorkspaceInvitationStatus;
 import com.wave.backend.workspaceinvite.repository.WorkspaceInvitationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
+@Transactional
 public class WorkspaceInvitationDeclineService {
 
     private final WorkspaceInvitationRepository invitationRepository;

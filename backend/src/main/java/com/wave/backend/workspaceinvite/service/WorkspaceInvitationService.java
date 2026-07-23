@@ -10,6 +10,7 @@ import com.wave.backend.workspaceinvite.dto.CreateWorkspaceInvitationRequest;
 import com.wave.backend.workspaceinvite.dto.WorkspaceInvitationResponse;
 import com.wave.backend.workspaceinvite.repository.WorkspaceInvitationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -68,6 +69,7 @@ public class WorkspaceInvitationService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<WorkspaceInvitationResponse> getMyInvitations() {
 
         String email = SecurityUtil.getCurrentUserEmail();
@@ -84,6 +86,7 @@ public class WorkspaceInvitationService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<WorkspaceInvitationResponse> getWorkspaceInvitations(
             Long workspaceId
     ) {

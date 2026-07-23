@@ -17,6 +17,7 @@ import com.wave.backend.workspaceinvite.entity.WorkspaceInvitation;
 import com.wave.backend.workspaceinvite.entity.WorkspaceInvitationStatus;
 import com.wave.backend.workspaceinvite.repository.WorkspaceInvitationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WorkspaceInvitationCreateService {
@@ -44,6 +45,7 @@ public class WorkspaceInvitationCreateService {
         this.mapper = mapper;
     }
 
+    @Transactional
     public WorkspaceInvitationResponse createInvitation(
             CreateWorkspaceInvitationRequest request
     ) {
@@ -61,12 +63,7 @@ public class WorkspaceInvitationCreateService {
                                 "Workspace not found."
                         ));
 
-        User invitee = userRepository
-                .findById(request.getInviteeId())
-                .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "Invitee not found."
-                        ));
+        User invitee = resolveInvitee(request);
 
         WorkspaceMember inviterMember =
                 workspaceMemberRepository
@@ -146,6 +143,34 @@ public class WorkspaceInvitationCreateService {
 
         return mapper.toResponse(invitation);
 
+    }
+
+    private User resolveInvitee(
+            CreateWorkspaceInvitationRequest request
+    ) {
+        if (request.getInviteeId() != null) {
+            return userRepository
+                    .findById(request.getInviteeId())
+                    .orElseThrow(() ->
+                            new UserNotFoundException(
+                                    "Invitee not found."
+                            ));
+        }
+
+        String inviteeEmail = request.getInviteeEmail();
+        if (inviteeEmail == null
+                || inviteeEmail.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Invitee email is required."
+            );
+        }
+
+        return userRepository
+                .findByEmailIgnoreCase(inviteeEmail.trim())
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "No registered Wave account uses this email. Ask them to create an account first."
+                        ));
     }
 
 }
