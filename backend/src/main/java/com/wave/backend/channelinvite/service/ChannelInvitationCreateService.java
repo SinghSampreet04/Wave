@@ -169,9 +169,6 @@ public class ChannelInvitationCreateService {
                 "CHANNEL"
         );
 
-        // Future:
-        // emailService.sendChannelInvitation(...);
-
         return mapper.toResponse(invitation);
 
     }

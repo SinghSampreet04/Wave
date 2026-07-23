@@ -1,79 +1,108 @@
 # Wave
 
-Wave is a real-time collaboration app with a React/Vite frontend and a Spring
-Boot backend. It supports account creation, workspaces, channels, messaging,
-threads, reactions, WebSocket updates, invitations, notifications, and file
-attachments.
+Wave is a full-stack team collaboration platform built around real-time
+communication, access-controlled workspaces, and event-driven client updates.
+The codebase uses feature-oriented modules on both the Spring Boot API and the
+React client.
 
-## Run locally
+## Capabilities
 
-Requirements: Node.js 20+, Java 17+, and Docker Desktop.
+- JWT authentication with rotating refresh sessions, email verification, and
+  password recovery
+- Workspace and channel membership, invitations, and role-based authorization
+- Channel and direct messaging with editing, soft deletion, reactions, threads,
+  typing indicators, mentions, pins, read states, and attachments
+- Live notifications, presence, reconnect-safe WebSocket subscriptions, and
+  access-controlled search
+- PostgreSQL persistence, Redis-backed coordination and rate limiting, Flyway
+  migrations, health probes, metrics, and persistent file storage
 
-1. Prepare the local service configuration:
+## Architecture
 
-   ```sh
-   cp backend/.env.example backend/.env
-   ```
+```text
+Browser
+  └─ Caddy
+      ├─ React 19 / TypeScript / Vite
+      └─ Spring Boot 3 / REST / STOMP
+          ├─ PostgreSQL 17
+          ├─ Redis 7
+          └─ Persistent uploads
+```
 
-2. Start PostgreSQL, Redis, and the backend:
+The backend is organized by domain feature; each feature owns its controllers,
+services, DTOs, repositories, and entities. The frontend follows the same
+boundary with feature-local APIs, hooks, state, components, and types. REST
+provides authoritative state while normalized STOMP events update React Query
+caches in real time.
 
-   ```sh
-   cd backend
-   docker compose --env-file .env up --build
-   ```
+## Technology
 
-3. In another terminal, start the frontend:
+| Area | Stack |
+| --- | --- |
+| Backend | Java 17, Spring Boot, Spring Security, JPA, STOMP, Maven |
+| Frontend | React 19, TypeScript, React Query, Zustand, Vite |
+| Data | PostgreSQL, Redis, Flyway |
+| Operations | Docker Compose, Caddy, Nginx, GitHub Actions |
 
-   ```sh
-   cd frontend
-   cp .env.example .env
-   npm ci
-   npm run dev
-   ```
+## Repository
 
-Open http://localhost:5173. The API is available on port 8082 and its health
-endpoint is http://localhost:8082/actuator/health.
+| Path | Purpose |
+| --- | --- |
+| `backend/` | Spring Boot API, domain modules, migrations, and tests |
+| `frontend/` | React application and browser tests |
+| `ops/` | Backup, restore, and deployment smoke checks |
+| `compose.yaml` | Production service topology |
+| `Caddyfile` | TLS termination and same-origin proxy rules |
 
-## Deploy with Docker Compose
+## Development
 
-The root Compose stack builds and runs the React application, Spring Boot API,
-PostgreSQL, and Redis behind one browser origin.
+Requirements: Java 17, Node.js 20+, and Docker.
+
+```sh
+cd backend
+cp .env.example .env
+docker compose --env-file .env up --build
+```
+
+```sh
+cd frontend
+cp .env.example .env
+npm ci
+npm run dev
+```
+
+Frontend: `http://localhost:5173`
+
+API health: `http://localhost:8082/actuator/health`
+
+## Verification
+
+```sh
+(cd backend && ./mvnw verify)
+(cd frontend && npm run lint && npm test -- --run && npm run build)
+```
+
+## Production
+
+The production Compose stack exposes only Caddy on ports 80 and 443. Application
+services remain on an internal network and run with health checks, resource
+limits, rotated logs, and persistent volumes.
 
 ```sh
 cp .env.example .env
-# Replace every placeholder in .env, especially POSTGRES_PASSWORD,
-# JWT_SECRET, and PUBLIC_ORIGIN.
+docker compose config
 docker compose up --build -d
-docker compose ps
+PUBLIC_ORIGIN=https://wave.example.com ./ops/smoke-test.sh
 ```
 
-Wave is exposed on `APP_PORT` (8080 by default). In a public environment,
-terminate TLS in a load balancer or reverse proxy and set `PUBLIC_ORIGIN` to
-the exact HTTPS origin. PostgreSQL and Redis are kept on an internal Docker
-network; database, Redis, and uploaded-file data use named volumes.
-
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the production checklist,
-backup guidance, health checks, and upgrade procedure.
-
-## Checks
+Operational commands:
 
 ```sh
-cd frontend && npm run build && npm run lint
-cd backend && ./mvnw test
+./ops/backup.sh
+./ops/restore.sh ./backups/<timestamp>
+docker compose ps
+docker compose logs backend
 ```
 
-`backend/.env` and `frontend/.env` are local-only files. Use unique database
-passwords and JWT secrets outside local development; do not commit real email
-credentials or production secrets.
-
-## Completed release flows
-
-- Auth, verification, password recovery, workspaces, channels, invitations
-- Real-time channel messages, edits, deletes, reactions, typing, and threads
-- Direct conversations with send, edit, delete, reaction, and live updates
-- Access-controlled channel and direct-message search
-- Real-time notification center with read state
-- Pins, mentions, read receipts, file attachments, and presence infrastructure
-- Rate limiting, Actuator health, Prometheus metrics, persistent uploads
-- Production containers, same-origin WebSocket/API proxying, health checks,
-  graceful shutdown, and non-root application runtimes
+Production configuration is defined by `.env.example`. Secrets and local
+environment files are excluded from version control.

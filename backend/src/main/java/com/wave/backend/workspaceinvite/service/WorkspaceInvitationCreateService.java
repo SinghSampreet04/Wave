@@ -138,9 +138,6 @@ public class WorkspaceInvitationCreateService {
                 "WORKSPACE"
         );
 
-        // Future:
-        // emailService.sendWorkspaceInvitation(...);
-
         return mapper.toResponse(invitation);
 
     }
